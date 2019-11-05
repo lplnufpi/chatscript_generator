@@ -16,15 +16,18 @@ class Word2Vec(object):
         Returns:
             list[str]: List of TOP_N most similar words.
         """
+        # try:
         most_similar = self.model.most_similar(word)
         top_similar = [x for (x, _) in most_similar[:top_n]]
         return top_similar
+        # except KeyError:
+            # return []
 
 
 class CBoW(Word2Vec):
 
     def __init__(self):
-        self.model = KeyedVectors.load_word2vec_format('cbow_s50.txt')
+        self.model = KeyedVectors.load_word2vec_format('word2vec/cbow_s50.txt')
 
 
 if __name__ == '__main__':

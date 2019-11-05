@@ -61,15 +61,24 @@ def add_intentions_syns(question, intentions_syns):
     return question
 
 
+def do_preprocessing(question):
+    no_stopwords = preprocessing.replace_stopwords(question)
+    # correção gramatical
+    # remoção de pontuação
+    return no_stopwords
+
+
 def generate_rules(qna, embedding):
     """Generate the rules"""
     i = 0
     rules = list()
     for (question, answer) in qna:
         pprd_question = do_preprocessing(question)
+        no_stopwords = re.sub(r'\*~\d+', '', pprd_question)
+        no_stopwords = ' '.join(nltk.word_tokenize(no_stopwords))
 
-        entities = find_keywords.find_entities(pprd_question)
-        intentions = find_keywords.find_intention(pprd_question, entities)
+        entities = find_keywords.find_entities(no_stopwords)
+        intentions = find_keywords.find_intention(no_stopwords, entities)
         intentions_syns = get_syns(intentions, embedding)
         question_rule = add_intentions_syns(pprd_question, intentions_syns)
 
@@ -80,18 +89,11 @@ def generate_rules(qna, embedding):
     return rules
 
 
-def do_preprocessing(question):
-    no_stopwords = preprocessing.replace_stopwords(question)
-    # correção gramatical
-    # remoção de pontuação
-    return no_stopwords
-
-
 def generate(path='faqs.csv'):
     cbow = word2vec.CBoW()
     qnas = load_questions_answers_pairs(path)
     rules = generate_rules(qnas, cbow)
-    pass
+    import pdb;pdb.set_trace()
 
 if __name__ == '__main__':
     generate()
