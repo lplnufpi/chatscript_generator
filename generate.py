@@ -2,9 +2,11 @@
 import re
 import nltk
 
+import topics
+import add_syns
 import preprocessing
 import find_keywords
-from word2vec import word2vec
+from wordembbeding import wordembedding
 
 
 def load_questions_answers_pairs(path):
@@ -26,73 +28,63 @@ def load_questions_answers_pairs(path):
         return lines
 
 
-def get_syns(words, embedding):
-    """Get the synonyms to the words by embedding.
+def load_ctx_entities(path):
+    """Loads the context entities file and return its content as list.
 
     Args:
-        words (list): List of words to get their syns.
-        embedding (word2vec.Word2Vec): Trained word2vec model.
+        path: Path to context entities file.
 
     Returns:
-        dict: Dictionar containing the words and their syns.
+        list: List containg the context entities.
     """
-    syns = dict()
-    for word in words:
-        syns[word] = embedding.get_similar(word)
-    return syns
+    with open(path, 'r') as arq:
+        text = arq.read().split('\n')
+        return text
 
 
-def add_intentions_syns(question, intentions_syns):
-    """Replace every intention in the question by it and its syns in
-    ChatScript sintax.
+def preprocess_questions(qnas, ctx_entities):
+    """Preprocess all the questions.
 
     Args:
-        questions (str): Text to be changed.
-        intentions_syns (dict): Intentions and their syns.
+        qnas (tuple): Tuple with question and answer.
+        ctx_entities (list): List of context entities.
 
-    Returns:
-        str: The question with syns.
+    Yield:
+        tuple: Tuple containing preprocessed question and answer.
     """
-    for intention in intentions_syns.keys():
-        intentions = [intention] + intentions_syns[intention]
-        intentions_text = '({})'.format('|'.join(intentions))
-        question = question.replace(intention, intentions_text)
-
-    return question
+    for (question, answer) in qnas:
+        pp_question = preprocessing.preprocess(question, ctx_entities)
+        yield pp_question, answer
 
 
-def do_preprocessing(question):
-    no_stopwords = preprocessing.replace_stopwords(question)
-    # correção gramatical
-    # remoção de pontuação
-    return no_stopwords
+def generate_rules(qnas):
+    """Generate the rules according to ChatScript sintax.
 
+    Args:
+        qnas (tuple): Tuple with question and answer.
 
-def generate_rules(qna, embedding):
-    """Generate the rules"""
+    Yield:
+        str: Rule according to ChatScript sintax.
+    """
     i = 0
-    rules = list()
-    for (question, answer) in qna:
-        pprd_question = do_preprocessing(question)
-        no_stopwords = re.sub(r'\*~\d+', '', pprd_question)
-        no_stopwords = ' '.join(nltk.word_tokenize(no_stopwords))
-
-        entities = find_keywords.find_entities(no_stopwords)
-        intentions = find_keywords.find_intention(no_stopwords, entities)
-        intentions_syns = get_syns(intentions, embedding)
-        question_rule = add_intentions_syns(pprd_question, intentions_syns)
-
-        rule = '\nu: U{} ({})\n{}'.format(i, question_rule, answer)
-        rules.append(rule)
+    for (question, answer) in qnas:
         i += 1
+        rule = '\nu: U{} ({})\n\t{}'.format(i, question, answer)
+        yield rule
 
-    return rules
 
+def generate(questions_path='faqs.csv', ctx_entities_path='ctx_entities.txt'):
+    cbow = wordembedding.CBoW()
 
-def generate(path='faqs.csv'):
-    cbow = word2vec.CBoW()
-    qnas = load_questions_answers_pairs(path)
-    rules = generate_rules(qnas, cbow)
+    ctx_entities = load_ctx_entities(ctx_entities_path)
+    qnas = load_questions_answers_pairs(questions_path)
+
+    pp_qnas = preprocess_questions(qnas, ctx_entities)
+    added_syns = add_syns.add_syns(pp_qnas, cbow)
+    rules = generate_rules(added_syns)
+    # topic = topics.generate_topic(added_syns, rules, cbow)
+
+    asdf = [r for r in rules]
     import pdb;pdb.set_trace()
 
 if __name__ == '__main__':

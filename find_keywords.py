@@ -1,14 +1,34 @@
 import re
 import nlpnet
+import logging
+
 
 nlpnet.set_data_dir('/home/jpegx100/develop/lpln/pos-pt')
 tagger = nlpnet.POSTagger()
 
 
 def tag_text(text):
-    tags = tagger.tag(text)[0]
-    tagged_text = ' '.join(['{}/{}'.format(x,y) for (x, y) in tags])
-    return tagged_text
+    """Add tags to passed text.
+
+    Args:
+        text (str): Text to be tagged.
+
+    Return:
+        str: Tagged text.
+
+    Example:
+        >>> tag_text('Bom dia')
+        'Bom/ADJ dia/N'
+    """
+    if text.replace(' ', ''):
+        try:
+            tags = tagger.tag(text)[0]
+            tagged_text = ' '.join(['{}/{}'.format(x,y) for (x, y) in tags])
+            return tagged_text
+        except:
+            logging.exception(u'Error tagging text: "%s"', text)
+
+    return ''
 
 
 def flatten_list(items):

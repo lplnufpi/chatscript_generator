@@ -42,6 +42,20 @@ def remove_punctation(tokens):
     return non_stopwords
 
 
+def remove_stopwords(text):
+    """This method removes stopwords from the text.
+
+    Args:
+        text (str): Text to remove stopwords.
+
+    Returns:
+        text: Text without stopwords.
+    """
+    tokens = nltk.word_tokenize(text)
+    non_stopwords = [tk for tk in tokens if tk not in stopwords.stopwords]
+    return ' '.join(non_stopwords)
+
+
 def replace_stopwords(tokens):
     """This method replaces stopwords from the text by wildcard.
 
@@ -95,6 +109,16 @@ def replace_context_entities(ctx_entities, text):
 
 
 def preprocess(question, ctx_entities):
+    """Do all steps of question preprocessing.
+
+    Args:
+        question (str): Original question in natural language.
+        ctx_entities (list): Context entities.
+
+    Returns:
+        str: Question lower, without punctuation and with stopwords
+            replaced by wildcards.
+    """
     rplcd_ctx_entities = replace_context_entities(
         ctx_entities, question.lower()
     )
