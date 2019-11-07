@@ -3,6 +3,7 @@ import topics
 import add_syns
 import preprocessing
 import wordembedding
+import postprocessing
 
 
 def load_questions_answers_pairs(path):
@@ -85,8 +86,7 @@ def generate(
     rules = generate_rules(added_syns)
     rules_text = ''.join([rule for rule in rules])
     topic = topics.generate_topic(added_syns, rules_text, cbow)
-    with open('topic.top', 'w') as arq:
-        arq.write(topic)
+    postprocessing.save_chatbot_files('meubot', [topic])
 
 if __name__ == '__main__':
     generate()
