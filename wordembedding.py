@@ -10,6 +10,7 @@ class WordEmbbeding(object):
 
     def __init__(self):
         dirname = os.path.dirname(os.path.abspath(__file__))
+        dirname = os.path.join(dirname, 'data_embedding')
         binary_model_filename = os.path.join(dirname, self.filename + '.mbin')
         txt_model_filename = os.path.join(dirname, self.filename + '.txt')
 
