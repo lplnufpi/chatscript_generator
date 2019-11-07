@@ -34,7 +34,7 @@ def add_intentions_syns(question, intentions_syns):
     """
     for intention in intentions_syns.keys():
         intentions = [intention] + intentions_syns[intention]
-        intentions_text = '({})'.format('|'.join(intentions))
+        intentions_text = '[{}]'.format('|'.join(intentions))
         question = question.replace(intention, intentions_text)
 
     return question
@@ -48,10 +48,11 @@ def add_syns(qnas, embedding_model):
         embedding_model (wordembedding.WordEmbedding): Word Embedding
             model.
 
-    Yield:
-        tuple: Tuple containing question with replaced syns and its
-            answer.
+    Returns:
+        list[tuple]: List of tuples containing questions with replaced
+            syns and its answers.
     """
+    added_syns = list()
     for (question, answer) in qnas:
         no_wildcards = re.sub(r'\*~\d+', '', question)
         entities = find_keywords.find_entities(no_wildcards)
@@ -60,4 +61,6 @@ def add_syns(qnas, embedding_model):
         intentions_syns = get_syns(intentions, embedding_model)
         question_with_syns = add_intentions_syns(question, intentions_syns)
 
-        yield question_with_syns, answer
+        added_syns.append((question_with_syns, answer))
+
+    return added_syns

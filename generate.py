@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
-import re
-import nltk
-
 import topics
 import add_syns
 import preprocessing
-import find_keywords
-from wordembbeding import wordembedding
+import wordembedding
 
 
 def load_questions_answers_pairs(path):
@@ -73,7 +69,12 @@ def generate_rules(qnas):
         yield rule
 
 
-def generate(questions_path='faqs.csv', ctx_entities_path='ctx_entities.txt'):
+def generate(
+    questions_path='input/faqs.csv',
+    ctx_entities_path='input/ctx_entities.txt'
+):
+    """Generate ChatScript files"""
+
     cbow = wordembedding.CBoW()
 
     ctx_entities = load_ctx_entities(ctx_entities_path)
@@ -82,10 +83,10 @@ def generate(questions_path='faqs.csv', ctx_entities_path='ctx_entities.txt'):
     pp_qnas = preprocess_questions(qnas, ctx_entities)
     added_syns = add_syns.add_syns(pp_qnas, cbow)
     rules = generate_rules(added_syns)
-    # topic = topics.generate_topic(added_syns, rules, cbow)
-
-    asdf = [r for r in rules]
-    import pdb;pdb.set_trace()
+    rules_text = ''.join([rule for rule in rules])
+    topic = topics.generate_topic(added_syns, rules_text, cbow)
+    with open('topic.top', 'w') as arq:
+        arq.write(topic)
 
 if __name__ == '__main__':
     generate()

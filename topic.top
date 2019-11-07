@@ -1,0 +1,22 @@
+topic: ~faq.top keep repeat (centauro metropolitana onde 2ª magnetômetro aonde localizo qualquer nota faço qualque farei trituração postar postagem funcionava qual-quer página poderei eletroacústica development LOCALIZA_CODIGO produto service BIKE_SERVICE_BIKE funcionará funciona publicar cagarolas presente embalagem turíbulo eletrónica exposto biparam registo plataforma cereal quando charrete tributária instalação icatu relacionamento rosca código transmitir BIKE_SERVICE via posso pã¡gina vinculo inventário pro-duto quero maca central brokeback companies bike eletrônica biking previdenciária autoestrada montagem remontagem disponível POSTAR_PRODUTO NFE fiz pretendo vínculo bicicleta 2NFE vale_trocas fiscal MONTA_BIKE)
+u: U1 (*~1 localizo *~1 código *~2 vale_trocas)
+	LOCALIZA_CODIGO
+u: U2 (*~1 funciona *~1 postagem)
+	POSTAGEM
+u: U3 (quero postar *~1 produto)
+	POSTAR_PRODUTO
+u: U4 (*~1 centauro [disponibiliza|oferece|disponibilizará|disponibilizou] embalagem *~1 presente)
+	EMBALAGEM_PRESENTE
+u: U5 (onde [solicitar|requerer|pedir|exigir] *~1 montagem *~1 bicicleta)
+	MONTA_BIKE
+u: U6 (*~2 [é|seria|foi|era] bike service)
+	BIKE_SERVICE
+u: U7 (central *~1 relacionamento)
+	RELACIONAMENTO
+u: U8 (*~2 [é|seria|foi|era] nota fiscal eletrônica)
+	NFE
+u: U9 (*~1 faço *~1 [resgatar|salvar|capturar|seduzir] *~1 2ª via *~1 nota fiscal)
+	2NFE
+u: U10 (posso [utilizar|usar|incorporar|disponibilizar] *~1 bike service *~1 qualquer bicicleta)
+	BIKE_SERVICE_BIKE
+u: U11 ()

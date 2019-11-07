@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+"""Module for test
+"""
 import topics
-from wordembbeding import wordembedding
+import wordembedding
 
 
 class Test(object):

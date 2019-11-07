@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 import re
 
 import preprocessing
@@ -17,25 +16,37 @@ def get_topic_keywords(qnas, embedding_model=None):
     Return:
         str: Topic file content.
     """
-    top_words = list()
+    answers_kwords = list()
+    questions_kwords = list()
+    similar_answers_kwords = list()
+    similar_questions_kwords = list()
+
     for question, answer in qnas:
-        top_words.extend(re.sub(r'((\*~\d+)|(\(.*?\)))', ' ', question).split())
+        questions_kwords.extend(
+            re.sub(r'((\*~\d+)|(\[.*?\]))', ' ', question).split()
+        )
         answer_no_sw = preprocessing.remove_stopwords(answer)
-        top_words.extend(find_keywords.find_entities(answer_no_sw))
+        answers_kwords.extend(
+            find_keywords.find_entities(answer_no_sw)
+        )
 
     if embedding_model is not None:
-        similars = list()
-        for word in top_words:
-            word_similars = embedding_model.get_similar(word)
-            similars.extend(word_similars)
+        for word in questions_kwords:
+            word_similars = embedding_model.get_similar(word, top_n=2)
+            similar_questions_kwords.extend(word_similars)
 
-        top_words.extend(similars)
+        for word in answers_kwords:
+            word_similars = embedding_model.get_similar(word, top_n=2)
+            similar_answers_kwords.extend(word_similars)
 
-    top_words = set(top_words)
-    return top_words
+    result = set(
+        questions_kwords + answers_kwords +
+        similar_answers_kwords + similar_questions_kwords
+    )
+    return result
 
 
-def generate_topic(qnas, rules, embedding_model):
+def generate_topic(qnas, rules_text, embedding_model):
     """Generate topic file content.
 
     Args:
@@ -46,7 +57,8 @@ def generate_topic(qnas, rules, embedding_model):
     Return:
         str: Topic file content.
     """
-    top_words = get_topic_keywords(qnas, embedding_model)
+    keywords = get_topic_keywords(qnas, embedding_model)
+    top_keywords = ' '.join(keywords)
     top_name = 'faq.top'
-    top_header = u'topic: ~{} keep repeat ({})'.format(top_name, top_words)
-    return top_header + rules
+    top_header = u'topic: ~{} keep repeat ({})'.format(top_name, top_keywords)
+    return top_header + rules_text
