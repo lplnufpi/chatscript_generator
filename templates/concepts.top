@@ -1,0 +1,24 @@
+# SALUTATION CONCEPTS
+concept: ~salutation [olá oi opa beleza "e aí" "bom dia" "boa tarde" "boa noite"]
+concept: ~salutation_answers [olá oi]
+
+concept: ~can_i_help ["Como posso ajudar?" "Em que posso ajudar?" "O que posso fazer por você?"]
+
+concept: ~salutation_question ["como vai" "tudo bem" "tudo bom"]
+concept: ~salutation_question_answer ["Estou bem" "Está tudo bem"]
+
+concept: ~day_period [dia tarde noite manhã]
+concept: ~returning ["Olá novamente" "Olá, que bom que voltou"]
+
+# TIME CONCEPTS
+concept: ~time_period [dia manhã noite tarde "final de semana" "fim de semana" "semana" mês feriado]
+
+# MISC CONCEPTS
+concept: ~you_are_welcome ["De nada" "Por nada" "Estou aqui para lhe ajudar" "Fique à vontade" Disponha "Não há de quê" "Imagina" "Não seja por isso" "Obrigado você" "Eu que agradeço"]
+
+# INFORMAL CONCEPTS
+concept: ~salutation_informal [opa beleza "e aí" "e ai" "e aê" "e ae" "fala aí" "fala ai" "fala aê" "fala ae" "fala tu" "fala mano"]
+concept: ~salutation_informal_answer [opa beleza "e aí" "fala aí" "fala tu" "fala mano"]
+concept: ~can_i_help_informal ["Quê que você manda?" "Como te ajudo?" "Tá precisando de quê?"]
+concept: ~salutation_question_informal ["tudo sussa" "suave" "tranquilo" "e os corre"]
+concept: ~salutation_question_answer_informal ["Tudo sussa" "Suave" "Tranquilo"]

@@ -1,14 +1,27 @@
-
-topic: ~INTRODUCTIONS (~emogoodbye ~emohello ~emohowzit name here )
+topic: ~INTRODUCTIONS keep repeat (~salutation)
 
 #!x will match on every return start of a conversation
 t: ( %input<%userfirstline %input>0 )
 	^keep()
-	[Olá novamente] [Oi, denovo.][Olá, que bom que voltou.][Oi.]
+	Olá novamente, %user. ^pick(~can_i_help)
 
 #!x matches every time on startup of a new conversation
 t: ( %input<%userfirstline )
 	^keep()
-	Olá, bem-vindo.
+	Olá, bem-vindo, %user. ^pick(~can_i_help)
 
-u: ([Oi Olá]) [Olá] [Oi]
+u: (_[bom boa] _~day_period)
+	^pos(capitalize _0) _1, %user. ^pick(~can_i_help)
+
+u: (~salutation)
+	^pick(~salutation_answers), %user. ^pick(~can_i_help)
+
+u: (~salutation_question)
+	^pick(~salutation_question_answer), %user. ^pick(~can_i_help)
+
+# INFORMAL RULES
+u: (~salutation_informal)
+	^pick(~salutation_informal_answer), %user. ^pick(~can_i_help_informal)
+
+u: (~salutation_question_informal)
+	^pick(~salutation_question_answer_informal), %user. ^pick(~can_i_help_informal)
