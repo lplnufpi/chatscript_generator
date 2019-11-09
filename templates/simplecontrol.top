@@ -16,15 +16,12 @@ $cs_control_main = ~control
 # $cs_control_post = ~XPOSTPROCESS  # uncomment to enable talk
 # The postprocess topic I define will allow windows system to use verbal output
 $userprompt = ^"%user: >"
-$botprompt = ^"HARRY: "
+$botprompt = ^"BOTNAME: "
 
 
 # This means, after one output is generated, no more will be reacted to.
 # Alternatively one might have a reaction to every single sentence in the user's input.
 $singleResponse = 1 # issue only 1 output message
-
-# windows can do voice output if the next line is removed
-$SHUTUP = 1
 
 # This tells the engine what bot to use if no botname is provided in the message
 table: defaultbot (^name)
@@ -40,19 +37,6 @@ topic: ~control system ()
 # on startup, do introduction.  It takes the user input which starts a new conversation and looks for a response in  ~introductions
 u: ( %input<%userfirstline)
 	gambit(~introductions)
-
-# if the user says shut up anywhere in the response, set the variable $shutup to 1, which is used later to stop using the talk output in windows
-u: (< shut up >) $shutup = 1
-# if the user says talk anywhere in the response, set the variable $shutup to null, which is used later to reestablish verbal output
-u: (< talk  >) $shutup = null
-
-# The below mere confirm oob data seen when using basic abilities
-u: (\[ callback \]) Callback seen.
-u: (\[ loopback \]) Loopback seen.
-u: (\[ alarm \]) Alarm seen.
-u: (< loopback test) \[ loopback=1000 \] Loopback requested.
-u: (< callback test) \[ callback=1000 \] Callback requested.
-u: (< alarm test) \[ alarm=5000 \] Alarm requested.
 
 u: () # main per-sentence processing
 	$_responseCount = %response
@@ -140,23 +124,8 @@ u: () # main per-sentence processing
 	if (%response == $_responseCount)  # we failed, somehow, to find something to say to user. Say something
 	{
 		 ^repeat()
-         I don't know what to say.
+         [Desculpe, não pude entender o que você deseja] [Desculpe, não lhe entendi] [Não consegui entender o que você deseja].
 	}
 
 
 topic: ~XPOSTPROCESS system () # gambits only - not allowed to write to  output - generates speech on windows -- for Linux you'd want to install Festival (or equivalent) and call that instead.
-
-t: (^query(direct_v ? chatoutput ? -1 ? @9  ))  # get the sentences  (why is the object) -- no longer has quotes around it
-	loop()
-	{
-		$$tmp = ^last(@9subject) # note last output which is quoted string
-		if (!%server AND %os == windows  AND !$SHUTUP)
-		{
-			$$tmp = ^"talk \"$$tmp\" "
-			popen($$tmp null)
-		}
-        if (!%server AND %os == mac  AND !$SHUTUP)
-        {
-            $$shellerror = system(^"say \"$$tmp\" ")
-        }
-	}
