@@ -72,6 +72,21 @@ def replace_stopwords(tokens):
     return non_stopwords
 
 
+def strip_wildcards(text):
+    """Removes wildcards at start or ending of text. It is used to
+    improve rule generalization power.
+
+    Args:
+        text (str): Text.
+
+    Returns:
+        str: Text without starting and ending wildcards.
+    """
+    removed_start = re.sub(r'^(\*~\d+ ?)+', '', text.strip())
+    removed_end = re.sub(r'(\*~\d+ ?)+$', '', removed_start)
+    return removed_end.strip()
+
+
 def add_wildcards(text):
     """Sum the consecutive wildcards and replace them by the result.
 
@@ -126,6 +141,7 @@ def preprocess(question, ctx_entities):
     no_punctuation = remove_punctation(tokens)
     no_stopwords = replace_stopwords(no_punctuation)
     no_stopwords = ' '.join(no_stopwords)
-    added_wildcards = add_wildcards(no_stopwords)
+    striped_wildcards = strip_wildcards(no_stopwords)
+    added_wildcards = add_wildcards(striped_wildcards)
 
     return added_wildcards

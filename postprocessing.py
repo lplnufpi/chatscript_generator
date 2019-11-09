@@ -51,7 +51,7 @@ def save_chatbot_files(botname, topics, cs_path='../ChatScript'):
         cs_path (str): Path of ChatScript base directory.
     """
     rawdata = os.path.join(cs_path, 'RAWDATA')
-    botname_formal = '_'.join(botname.upper().split())
+    botname_formal = '_'.join(botname.lower().split())
     botdir = os.path.join(rawdata, botname_formal)
     if not os.path.isdir(botdir):
         os.mkdir(botdir)

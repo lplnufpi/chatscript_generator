@@ -40,6 +40,12 @@ class Test(object):
         expected = 'acessar minha_conta na nome_empresa'
         assert result == expected
 
+    def test_strip_wildcards(self):
+        text = '*~1 *~1 fulano *~1 fulano *~1 *~1'
+        expected = 'fulano *~1 fulano'
+        result = preprocessing.strip_wildcards(text)
+        assert result == expected
+
     def test_preprocess(self):
         ctx_entities = ['minha conta']
         result = preprocessing.preprocess(
