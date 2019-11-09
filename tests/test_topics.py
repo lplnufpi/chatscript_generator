@@ -12,11 +12,11 @@ class Test(object):
         result = topics.get_topic_keywords(
             [
                 (
-                    '*~1 loja (disponibiliza|oferece) embalagem',
+                    '*~1 loja [disponibiliza oferece] embalagem',
                     'oferecemos empacotamento grátis para você'
                 ),
                 (
-                    '(utilizar|usar) *~1 bicicleta',
+                    '[utilizar usar] *~1 bicicleta',
                     'utilize nossas bicicletas à vontade'
                 )
             ]

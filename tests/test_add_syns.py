@@ -7,4 +7,4 @@ class Test(object):
         intents = {'vai': ['está', 'é']}
         result = add_syns.add_intentions_syns(question, intents)
 
-        assert result == 'Como [vai|está|é] você?'
+        assert result == 'Como [vai está é] você?'

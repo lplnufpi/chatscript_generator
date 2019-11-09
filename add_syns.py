@@ -34,7 +34,7 @@ def add_intentions_syns(question, intentions_syns):
     """
     for intention in intentions_syns.keys():
         intentions = [intention] + intentions_syns[intention]
-        intentions_text = '[{}]'.format('|'.join(intentions))
+        intentions_text = '[{}]'.format(' '.join(intentions))
         question = question.replace(intention, intentions_text)
 
     return question
