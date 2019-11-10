@@ -1,6 +1,6 @@
 import add_syns
 
-class Test(object):
+class TestAddSybs(object):
 
     def test_add_intentions_syns(self):
         question = 'Como vai você?'

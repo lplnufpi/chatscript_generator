@@ -5,7 +5,7 @@ import topics
 import wordembedding
 
 
-class Test(object):
+class TestTopics(object):
     cbow = wordembedding.CBoW()
 
     def test_get_topic_keywords(self):

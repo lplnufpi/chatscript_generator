@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import preprocessing
 
-class Test(object):
+class TestOreprocessing(object):
 
     def test_remove_punctation(self):
         result = preprocessing.remove_punctation(

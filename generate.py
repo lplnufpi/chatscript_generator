@@ -4,6 +4,7 @@ import add_syns
 import preprocessing
 import wordembedding
 import postprocessing
+import generalize_rules
 
 
 def load_questions_answers_pairs(path):
@@ -84,6 +85,7 @@ def generate(
     pp_qnas = preprocess_questions(qnas, ctx_entities)
     added_syns = add_syns.add_syns(pp_qnas, cbow)
     rules = generate_rules(added_syns)
+    generalized_rules = generalize_rules.generalize(added_syns)
     rules_text = ''.join([rule for rule in rules])
     topic = topics.generate_topic(added_syns, rules_text, cbow)
     postprocessing.save_chatbot_files('Botin', [topic])
