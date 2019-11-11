@@ -51,6 +51,7 @@ def generate_topic(qnas, rules_text, embedding_model):
 
     Args:
         qnas (list): List of questions and answers.
+        gen_qnas (list): List of generalizeds questions.
         embedding_model (wordembedding.WordEmbedding): Word Embedding
             model.
 
@@ -61,4 +62,4 @@ def generate_topic(qnas, rules_text, embedding_model):
     top_keywords = ' '.join(keywords)
     top_name = 'faq'
     top_header = u'topic: ~{} keep repeat ({})'.format(top_name, top_keywords)
-    return top_header + rules_text
+    return top_header + rules_text + gen_qnas

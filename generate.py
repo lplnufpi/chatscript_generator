@@ -55,7 +55,7 @@ def preprocess_questions(qnas, ctx_entities):
         yield pp_question, answer
 
 
-def generate_rules(qnas):
+def generate_rules(qnas, label='U'):
     """Generate the rules according to ChatScript sintax.
 
     Args:
@@ -67,7 +67,7 @@ def generate_rules(qnas):
     i = 0
     for (question, answer) in qnas:
         i += 1
-        rule = '\nu: U{} ({})\n\t{}'.format(i, question, answer)
+        rule = '\nu: {}{} ({})\n\t{}'.format(label, i, question, answer)
         yield rule
 
 
@@ -83,12 +83,25 @@ def generate(
     qnas = load_questions_answers_pairs(questions_path)
 
     pp_qnas = preprocess_questions(qnas, ctx_entities)
-    added_syns = add_syns.add_syns(pp_qnas, cbow)
-    rules = generate_rules(added_syns)
-    generalized_rules = generalize_rules.generalize(added_syns)
-    rules_text = ''.join([rule for rule in rules])
-    topic = topics.generate_topic(added_syns, rules_text, cbow)
+    original_rules = add_syns.add_syns(pp_qnas, cbow)
+    original_rules_text = ''.join(
+        [rule for rule in generate_rules(original_rules)]
+    )
+
+    question_rules = [q for (q, a) in original_rules]
+    question_original = [q for (q, a) in qnas]
+    gen_rules = generalize_rules.generalize(
+        question_rules, question_original, cbow
+    )
+    gen_rules_text = ''.join(
+        [rule for rule in generate_rules(gen_rules, label='G')]
+    )
+
+    rules = original_rules + gen_rules
+    rules_text = '{}\n\n\n{}'.format(original_rules_text, gen_rules_text)
+    topic = topics.generate_topic(rules, rules_text, cbow)
     postprocessing.save_chatbot_files('Botin', [topic])
+
 
 if __name__ == '__main__':
     generate()

@@ -22,10 +22,12 @@ def lemmatize(text, lemmatizer_path=None):
     input_file_path = os.path.join(lemmatizer_path, 'input')
     with open(input_file_path, 'w') as arq:
         arq.write(text)
-    command = '{}; java -jar lematizador.jar {}'.format(
+    command = 'cd {}; java -jar lematizador.jar {}'.format(
         lemmatizer_path, input_file_path
     )
     result_command = os.system(command)
+    if result_command != 0:
+        raise IOError('Erro ao utilizar lematizador')
 
     outfile = input_file_path+'.out'
     if not os.path.isfile(outfile):
