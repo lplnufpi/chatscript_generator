@@ -31,6 +31,12 @@ def tag_text(text):
     return ''
 
 
+def has_tag(word, tag):
+    """Verify if word has tag.
+    """
+    return tag_text(word).split('/')[-1] == tag
+
+
 def flatten_list(items):
     result = list()
     for item in items:

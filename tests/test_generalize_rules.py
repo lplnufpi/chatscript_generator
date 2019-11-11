@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import wordembedding
 import generalize_rules
+import preprocessing
+
 
 class TestGeneralizeRules(object):
     cbow = wordembedding.CBoW()
@@ -27,10 +29,27 @@ class TestGeneralizeRules(object):
 
     def test_group_rules(self):
         rules = [
-            'localizo *~1 código *~2 vale_trocas',
-            'funciona *~1 postagem',
-            'quero postar *~1 produto',
+            'localizo código vale_trocas',
+            'funciona postagem',
+            'quero postar produto',
         ]
         expected = [[1, 2], [0]]
         result = generalize_rules.group_rules(rules, self.cbow)
+        assert result == expected
+
+    def test_group_rules_dois(self):
+        rules = [
+            'como localizo o código do meu vale trocas?',
+            'como funciona a postagem?',
+            'quero postar meu produto.',
+            'a loja disponibiliza embalagem de presente?',
+            'onde solicitar a montagem de bicicleta?',
+            'posso utilizar o bike service para qualquer bicicleta?',
+            'o que é bike service?',
+            'o que é nota fiscal eletrônica?',
+            'como faço para resgatar a segunda via da nota fiscal?',
+        ]
+
+        expected = [[1, 2], [4, 5, 6], [8, 7], [0], [3]]
+        result = generalize_rules.group_rules(rules, self.cbow, similarity=0.9)
         assert result == expected

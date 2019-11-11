@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import re
+import copy
 import nltk
 
 import preprocessing
+import find_keywords
 from utils import lemmatizer
 
 
@@ -58,7 +60,7 @@ def group_by_similarity(sents, wordembedding, similarity=0.8):
 
     Example:
         >>> sents = [{'a', 'b'}, {'z', 'b'}, {'t', 'y'}]
-        >>> group_by_commom_words(sents)
+        >>> group_by_similarity(sents)
         [[0, 1], [2]]
 
     Args:
@@ -74,18 +76,28 @@ def group_by_similarity(sents, wordembedding, similarity=0.8):
             if i != j:
                 for word_i in sents[i]:
                     for word_j in sents[j]:
-                        sim = wordembedding.model.similarity(word_i, word_j)
-                        if sim >= similarity:
-                            tam = len(common_words)
-                            if tam == 0:
-                                common_words.append([i, j])
+                        try:
+                            sim = wordembedding.model.similarity(word_i, word_j)
+                        except KeyError:
+                            sim = similarity + 1 if word_i == word_j else 0
+
+
+                        if sim < similarity:
+                            continue
+                        if sim < 1:
+                            text = 'Similarity {}:{} -> {}'.format(
+                                word_i, word_j, sim)
+                            print(text)
+                        tam = len(common_words)
+                        if tam == 0:
+                            common_words.append([i, j])
+                        else:
+                            for g in range(tam):
+                                if i in common_words[g] or j in common_words[g]:
+                                    common_words[g].extend([i, j])
+                                    break
                             else:
-                                for g in range(tam):
-                                    if i in common_words[g] or j in common_words[g]:
-                                        common_words[g].extend([i, j])
-                                        break
-                                else:
-                                    common_words.append([i, j])
+                                common_words.append([i, j])
 
     common_words = [list(set(cw)) for cw in common_words]
     common_words_flatten = list()
@@ -98,39 +110,83 @@ def group_by_similarity(sents, wordembedding, similarity=0.8):
     return common_words + non_commom
 
 
-def group_rules(rules, cbow):
+def group_rules(rules, wordembedding, similarity=0.8):
     """Group rules that refer to same entity.
 
     Args:
         rules (list): List of tuples that contain question and answer.
+        wordembedding (wordembedding.WordEmbedding): Word Embedding
+            model.
+        similarity (float): Similarity score for grouping.
 
     Returns:
-        dict: Dict where the keys are the.
+        list: List with groups.
     """
-    wildcard = re.compile(r'\*~\d+')
-    separators = re.compile(r'[ \n/]')
-    no_wildcrd = [wildcard.sub('', rule) for rule in rules]
-    no_stopwords = [preprocessing.remove_stopwords(rule) for rule in no_wildcrd]
-    lemmas = [lemmatizer.lemmatize(rule) for rule in no_stopwords]
+    no_punctuation = [
+        ' '.join(preprocessing.remove_punctation(
+            nltk.word_tokenize(rule)
+        )) for rule in rules
+    ]
+    no_stopwords = [
+        preprocessing.remove_stopwords(rule) for rule in no_punctuation
+    ]
+
+    entities = list()
+    for rule in no_stopwords:
+        entity = ' '.join(find_keywords.find_entities(rule))
+        if entity:
+            entities.append(entity)
+        else:
+            # If there is no entities found append the rule itself
+            entities.append(rule)
+    lemmas = [lemmatizer.lemmatize(rule) for rule in entities]
 
     questions_keywords = list()
     for lemma in lemmas:
-        words = separators.split(lemma)
+        words = re.split(r'[ \n/]', lemma)
         stemms = [stem(word) for word in words if word]
         words.extend(stemms)
         set_words = set(words)
-        set_words.remove('')
+        if '' in set_words:
+            set_words.remove('')
         questions_keywords.append(set_words)
+        # import pdb; pdb.set_trace()
 
-    # USAR CBOW PARA SABER DISTÂNCIAS ENTRE PALAVRAS
-    groups = group_by_commom_words(questions_keywords)
-    # import pdb;pdb.set_trace()
-    return groups
+    # Grouping only by similarity once similarity englobs common_words
+    sents_group_common = list()
+    for nosw in no_stopwords:
+        words_nosw = set([
+            w for w in nosw.split()
+            if find_keywords.has_tag(w, 'N') or find_keywords.has_tag(w, 'NPROP')
+        ])
+        sents_group_common.append(words_nosw)
+
+    groups_common = group_by_commom_words(sents_group_common)
+    groups_similarity = group_by_similarity(
+        questions_keywords, wordembedding, similarity
+    )
+    groups_similarity_cp = copy.deepcopy(groups_similarity)
+
+    for i in range(len(groups_similarity_cp)):
+        for j in range(len(groups_similarity_cp[i])):
+            for k in range(len(groups_common)):
+                if groups_similarity_cp[i][j] in groups_common[k]:
+                    groups_similarity[i].extend(groups_common[k])
+
+    groups_final = list()
+    groups = [list(set(w)) for w in groups_similarity]
+    while groups:
+        group = groups.pop(0)
+        if group not in groups_final:
+            groups_final.append(group)
+
+    return groups_final
 
 
 def get_group_rejoinders(rules_ids, rules):
     rejoinders = list()
     for _id in rules_ids:
+        import pdb;pdb.set_trace()
         words = ''
         rejoinder = 'a: (<<{}>>) ^reuse(U{})'.format(words, _id)
         rejoinders.append(rejoinder)
@@ -138,7 +194,7 @@ def get_group_rejoinders(rules_ids, rules):
     return rejoinders
 
 
-def generalize(question_rules, question_original, wordembedding):
+def generalize(question_rules, question_original, wordembedding, ctx_entities):
     """Generalize the rules.
 
     Args:
@@ -147,15 +203,23 @@ def generalize(question_rules, question_original, wordembedding):
             language.
         wordembedding (wordembedding.WordEmbedding): Word Embedding
             model.
+        ctx_entities (list): List of context entities.
 
     Yield:
         str: Rule generalized.
     """
     generalized_rules = list()
-    groups = group_rules(question_rules, wordembedding)
+    questions_lower = [rule.lower() for rule in question_rules]
+    with_ctx = [
+        preprocessing.replace_context_entities(ctx_entities, rule)
+        for rule in questions_lower
+    ]
+    groups = group_rules(with_ctx, wordembedding)
     question_original = '\n'.join(question_original)
-    for index in range(len(groups)):
-        group_rejoinders = get_group_rejoinders(groups[index], question_rules)
+
+    import pdb;pdb.set_trace()
+    for index, group in enumerate(groups):
+        group_rejoinders = get_group_rejoinders(group, question_rules)
         rejoinders = '\n'.join(group_rejoinders)
 
         gen_rule = (
@@ -168,5 +232,6 @@ def generalize(question_rules, question_original, wordembedding):
             questions=question_original,
             group_rejoinders=rejoinders
         )
+        generalized_rules.append(gen_rule)
 
     return generalized_rules
