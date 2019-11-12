@@ -220,7 +220,7 @@ def get_group_rejoinders(rules_ids, rules):
             words = words.replace('INTENTIONS', intention[1:-1])
 
         # Mount rejoinder
-        words = ' '.join(words.split())
+        words = ' '.join(set(words.split()))
         rejoinder = '\ta: ([{}]) \n\t\t^reuse(U{})'.format(words, index+1)
         rejoinders.append(rejoinder)
         words_total.append(words)
@@ -247,6 +247,7 @@ def generalize(question_rules, question_original, wordembedding):
 
     for index, group in enumerate(groups):
         group_rejoinders, words = get_group_rejoinders(group, question_rules)
+        words = ' '.join(set(' '.join(words).split()))
         rejoinders = '\n'.join(group_rejoinders)
         questions = [question_original[qid] for qid in group]
 
@@ -257,7 +258,7 @@ def generalize(question_rules, question_original, wordembedding):
             '{group_rejoinders}'
         ).format(
             index=(index+1),
-            words=' '.join(words),
+            words=words,
             questions='\n\t - '.join(questions),
             group_rejoinders=rejoinders
         )
