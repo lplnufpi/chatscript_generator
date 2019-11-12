@@ -7,6 +7,7 @@ class WordEmbbeding(object):
     """Class to use the functions of WordEmbedding models."""
     model = None
     filename = None
+    ideal_similarity = 0.9
 
     def __init__(self):
         dirname = os.path.dirname(os.path.abspath(__file__))
@@ -33,7 +34,10 @@ class WordEmbbeding(object):
         """
         try:
             most_similar = self.model.most_similar(word)
-            top_similar = [x for (x, _) in most_similar[:top_n]]
+            top_similar = [
+                x for (x, sim) in most_similar[:top_n]
+                if sim > self.ideal_similarity
+            ]
             return top_similar
         except KeyError:
             return []

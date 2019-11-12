@@ -55,7 +55,7 @@ def group_by_commom_words(sents):
     return common_words + non_commom
 
 
-def group_by_similarity(sents, wordembedding, similarity=0.8):
+def group_by_similarity(sents, wordembedding):
     """Method used to group by similarity words.
 
     Example:
@@ -65,11 +65,11 @@ def group_by_similarity(sents, wordembedding, similarity=0.8):
 
     Args:
         sents (list): List of sets with words.
-        similarity (float): Similarity score.
 
     Returns:
         list: List of groups.
     """
+    similarity = wordembedding.ideal_similarity
     common_words = list()
     for i in range(len(sents)):
         for j in range(len(sents)):
@@ -110,14 +110,13 @@ def group_by_similarity(sents, wordembedding, similarity=0.8):
     return common_words + non_commom
 
 
-def group_rules(rules, wordembedding, similarity=0.8):
+def group_rules(rules, wordembedding):
     """Group rules that refer to same entity.
 
     Args:
         rules (list): List of tuples that contain question and answer.
         wordembedding (wordembedding.WordEmbedding): Word Embedding
             model.
-        similarity (float): Similarity score for grouping.
 
     Returns:
         list: List with groups.
@@ -162,9 +161,7 @@ def group_rules(rules, wordembedding, similarity=0.8):
         sents_group_common.append(words_nosw)
 
     groups_common = group_by_commom_words(sents_group_common)
-    groups_similarity = group_by_similarity(
-        questions_keywords, wordembedding, similarity
-    )
+    groups_similarity = group_by_similarity(questions_keywords, wordembedding)
     groups_similarity_cp = copy.deepcopy(groups_similarity)
 
     for i in range(len(groups_similarity_cp)):
@@ -185,16 +182,28 @@ def group_rules(rules, wordembedding, similarity=0.8):
 
 def get_group_rejoinders(rules_ids, rules):
     rejoinders = list()
-    for _id in rules_ids:
-        import pdb;pdb.set_trace()
-        words = ''
-        rejoinder = 'a: (<<{}>>) ^reuse(U{})'.format(words, _id)
+    words_total = list()
+    for index in rules_ids:
+        intentions = re.findall(r'\[.*?\]', rules[index])
+        words = re.sub(r'\*~\d+', '', rules[index])
+        words = ' '.join(re.sub(r'\[.*?\]', 'INTENTIONS/V', words).split())
+
+        tagged = find_keywords.tag_text(words)
+        no_aux_verbs = re.sub(r'(\w+/V )(\w+/V)', r'\2', tagged)
+        no_tags = re.sub(r'/\w+', '', no_aux_verbs)
+        words = no_tags
+        for intention in intentions:
+            words = words.replace('INTENTIONS', intention[1:-1])
+
+        words = ' '.join(words.split())
+        rejoinder = '\ta: ([{}]) \n\t\t^reuse(U{})'.format(words, index+1)
         rejoinders.append(rejoinder)
+        words_total.append(words)
 
-    return rejoinders
+    return rejoinders, words_total
 
 
-def generalize(question_rules, question_original, wordembedding, ctx_entities):
+def generalize(question_rules, question_original, wordembedding):
     """Generalize the rules.
 
     Args:
@@ -203,35 +212,29 @@ def generalize(question_rules, question_original, wordembedding, ctx_entities):
             language.
         wordembedding (wordembedding.WordEmbedding): Word Embedding
             model.
-        ctx_entities (list): List of context entities.
 
     Yield:
         str: Rule generalized.
     """
     generalized_rules = list()
-    questions_lower = [rule.lower() for rule in question_rules]
-    with_ctx = [
-        preprocessing.replace_context_entities(ctx_entities, rule)
-        for rule in questions_lower
-    ]
-    groups = group_rules(with_ctx, wordembedding)
-    question_original = '\n'.join(question_original)
+    questions_lower = [rule.lower() for rule in question_original]
+    groups = group_rules(questions_lower, wordembedding)
 
-    import pdb;pdb.set_trace()
     for index, group in enumerate(groups):
-        group_rejoinders = get_group_rejoinders(group, question_rules)
+        group_rejoinders, words = get_group_rejoinders(group, question_rules)
         rejoinders = '\n'.join(group_rejoinders)
+        questions = [question_original[qid] for qid in group]
 
         gen_rule = (
-            'u: G{index} ([{words}])'
-            'Aqui estão alguma opções relacionadas:\n{questions}\n'
+            'u: G{index} ([{words}])\n\t'
+            'Aqui estão alguma opções relacionadas:\n\t - {questions}\n'
             '{group_rejoinders}'
         ).format(
             index=(index+1),
-            # words=entities,
-            questions=question_original,
+            words=' '.join(words),
+            questions='\n\t - '.join(questions),
             group_rejoinders=rejoinders
         )
         generalized_rules.append(gen_rule)
 
-    return generalized_rules
+    return '\n'.join(generalized_rules)

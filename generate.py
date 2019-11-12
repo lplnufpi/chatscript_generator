@@ -7,7 +7,7 @@ import postprocessing
 import generalize_rules
 
 
-def load_questions_answers_pairs(path):
+def load_questions_answers_pairs(path, lower=True):
     """Loads the questions file and return a list of tuples containing
     questions and answers.
 
@@ -22,7 +22,10 @@ def load_questions_answers_pairs(path):
         lines = list()
         for t in text:
             w = t.split(',')
-            lines.append((w[0].lower(), ','.join(w[1:])))
+            if lower:
+                lines.append((w[0].lower(), ','.join(w[1:])))
+            else:
+                lines.append((w[0], ','.join(w[1:])))
         return lines
 
 
@@ -89,17 +92,16 @@ def generate(
     )
 
     question_rules = [q for (q, a) in original_rules]
-    question_original = [q for (q, a) in qnas]
+    question_original = load_questions_answers_pairs(
+        questions_path, lower=False
+    )
+    question_original = [q for (q, a) in question_original]
     gen_rules = generalize_rules.generalize(
         question_rules, question_original, cbow
     )
-    gen_rules_text = ''.join(
-        [rule for rule in generate_rules(gen_rules, label='G')]
-    )
 
-    rules = original_rules + gen_rules
-    rules_text = '{}\n\n\n{}'.format(original_rules_text, gen_rules_text)
-    topic = topics.generate_topic(rules, rules_text, cbow)
+    rules_text = '{}\n\n\n{}'.format(original_rules_text, gen_rules)
+    topic = topics.generate_topic(original_rules, rules_text, cbow)
     postprocessing.save_chatbot_files('Botin', [topic])
 
 

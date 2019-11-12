@@ -61,5 +61,7 @@ def generate_topic(qnas, rules_text, embedding_model):
     keywords = get_topic_keywords(qnas, embedding_model)
     top_keywords = ' '.join(keywords)
     top_name = 'faq'
-    top_header = u'topic: ~{} keep repeat ({})'.format(top_name, top_keywords)
-    return top_header + rules_text + gen_qnas
+    top_header = u'topic: ~{} keep repeat ({})\n\n'.format(
+        top_name, top_keywords
+    )
+    return top_header + rules_text

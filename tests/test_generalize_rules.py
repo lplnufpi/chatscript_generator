@@ -51,5 +51,21 @@ class TestGeneralizeRules(object):
         ]
 
         expected = [[1, 2], [4, 5, 6], [8, 7], [0], [3]]
-        result = generalize_rules.group_rules(rules, self.cbow, similarity=0.9)
+        result = generalize_rules.group_rules(rules, self.cbow)
         assert result == expected
+
+    def test_get_group_reijoindes(self):
+        rules = [
+            'localizo *~1 código *~2 vale_trocas',
+            'funciona *~1 postagem',
+            'quero postar *~1 produto',
+            'loja [disponibiliza oferece disponibilizará disponibilizou] embalagem *~1 presente',
+            'onde [solicitar requerer pedir exigir] *~1 montagem *~1 bicicleta',
+            'é bike_service',
+            'central *~1 relacionamento',
+            '[é seria foi era] nota fiscal eletrônica',
+            'faço *~1 [resgatar salvar capturar seduzir] *~1 segunda via *~1 nota fiscal',
+            'posso utilizar *~1 bike_service *~1 qualquer bicicleta'
+        ]
+        rules_ids = [[1,2]]
+        generalize_rules.get_group_rejoinders(rules_ids, rules)
