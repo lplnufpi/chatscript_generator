@@ -29,14 +29,14 @@ def load_questions_answers_pairs(path, lower=True):
         return lines
 
 
-def load_ctx_entities(path):
-    """Loads the context entities file and return its content as list.
+def load_file(path):
+    """Loads file and return its content as list.
 
     Args:
-        path: Path to context entities file.
+        path: Path to file.
 
     Returns:
-        list: List containg the context entities.
+        list: Content splited by linebreak.
     """
     with open(path, 'r') as arq:
         text = arq.read().split('\n')
@@ -76,14 +76,16 @@ def generate_rules(qnas, label='U'):
 
 def generate(
     questions_path='input/faqs.csv',
-    ctx_entities_path='input/ctx_entities.txt'
+    ctx_entities_path='input/ctx_entities.txt',
+    questions_titles_path='input/faqs_titles.txt'
 ):
     """Generate ChatScript files"""
 
     cbow = wordembedding.CBoW()
 
-    ctx_entities = load_ctx_entities(ctx_entities_path)
+    ctx_entities = load_file(ctx_entities_path)
     qnas = load_questions_answers_pairs(questions_path)
+    questions_titles = load_file(questions_titles_path)
 
     pp_qnas = preprocess_questions(qnas, ctx_entities)
     original_rules = add_syns.add_syns(pp_qnas, cbow)
@@ -97,7 +99,7 @@ def generate(
     )
     question_original = [q for (q, a) in question_original]
     gen_rules = generalize_rules.generalize(
-        question_rules, question_original, cbow
+        question_rules, question_original, cbow, questions_titles
     )
 
     rules_text = '{}\n\n\n{}'.format(original_rules_text, gen_rules)

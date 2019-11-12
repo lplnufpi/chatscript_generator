@@ -67,5 +67,5 @@ class TestGeneralizeRules(object):
             'faço *~1 [resgatar salvar capturar seduzir] *~1 segunda via *~1 nota fiscal',
             'posso utilizar *~1 bike_service *~1 qualquer bicicleta'
         ]
-        rules_ids = [[1,2]]
-        generalize_rules.get_group_rejoinders(rules_ids, rules)
+        rules_ids = [1,2]
+        generalize_rules.get_group_rejoinders(rules_ids, rules, rules)

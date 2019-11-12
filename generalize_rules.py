@@ -191,7 +191,31 @@ def group_rules(rules, wordembedding):
     return groups_final
 
 
-def get_group_rejoinders(rules_ids, rules):
+def get_rejoinder_pattern(rule):
+    """This method creates the rejoinder match pattern.
+
+    Args:
+        rule (str): Chatscript rule.
+    """
+    # Store intentions to add futher
+    intentions = re.findall(r'\[.*?\]', rule)
+    pattern = re.sub(r'\*~\d+', '', rule)
+    pattern = ' '.join(re.sub(r'\[.*?\]', 'INTENTIONS/V', pattern).split())
+
+    # Removes auxiliary verbs
+    tagged = find_keywords.tag_text(pattern)
+    no_aux_verbs = re.sub(r'(\w+/V )(\w+/V)', r'\2', tagged)
+    no_tags = re.sub(r'/\w+', '', no_aux_verbs)
+    pattern = no_tags
+
+    # Add stored intentions
+    for intention in intentions:
+        pattern = pattern.replace('INTENTIONS', intention[1:-1])
+    pattern = ' '.join(set(pattern.split()))
+    return pattern
+
+
+def get_group_rejoinders(rules_ids, rules, rules_title):
     """This method do create rejoinders for rules group.
 
     Args:
@@ -203,32 +227,32 @@ def get_group_rejoinders(rules_ids, rules):
     """
     rejoinders = list()
     words_total = list()
-    for index in rules_ids:
-        # Store intentions to add futher
-        intentions = re.findall(r'\[.*?\]', rules[index])
-        words = re.sub(r'\*~\d+', '', rules[index])
-        words = ' '.join(re.sub(r'\[.*?\]', 'INTENTIONS/V', words).split())
 
-        # Removes auxiliary verbs
-        tagged = find_keywords.tag_text(words)
-        no_aux_verbs = re.sub(r'(\w+/V )(\w+/V)', r'\2', tagged)
-        no_tags = re.sub(r'/\w+', '', no_aux_verbs)
-        words = no_tags
-
-        # Add stored intentions
-        for intention in intentions:
-            words = words.replace('INTENTIONS', intention[1:-1])
+    if len(rules_ids) == 1:
+        index = rules_ids[0]
+        pattern = get_rejoinder_pattern(rules[index])
 
         # Mount rejoinder
-        words = ' '.join(set(words.split()))
-        rejoinder = '\ta: ([{}]) \n\t\t^reuse(U{})'.format(words, index+1)
+        rejoinder = (
+            '\ta: (~yess) ^reuse(U{})'
+            '\n\ta: (~noo) Não posso lhe ajudar'
+        ).format(index+1)
+        return [rejoinder], [pattern]
+
+    for index in rules_ids:
+        pattern = get_rejoinder_pattern(rules[index])
+
+        # Mount rejoinder
+        rejoinder = '\ta: ([{}]) \n\t\t^reuse(U{})'.format(pattern, index+1)
         rejoinders.append(rejoinder)
-        words_total.append(words)
+        words_total.append(pattern)
 
     return rejoinders, words_total
 
 
-def generalize(question_rules, question_original, wordembedding):
+def generalize(
+    question_rules, question_original, wordembedding, rules_titles
+):
     """Generalize the rules.
 
     Args:
@@ -237,6 +261,7 @@ def generalize(question_rules, question_original, wordembedding):
             language.
         wordembedding (wordembedding.WordEmbedding): Word Embedding
             model.
+        rules_title (list): List of rules titles.
 
     Yield:
         str: Rule generalized.
@@ -246,22 +271,39 @@ def generalize(question_rules, question_original, wordembedding):
     groups = group_rules(questions_lower, wordembedding)
 
     for index, group in enumerate(groups):
-        group_rejoinders, words = get_group_rejoinders(group, question_rules)
+        group_rejoinders, words = get_group_rejoinders(
+            group, question_rules, rules_titles
+        )
         words = ' '.join(set(' '.join(words).split()))
         rejoinders = '\n'.join(group_rejoinders)
-        questions = [question_original[qid] for qid in group]
 
-        gen_rule = (
-            'u: G{index} ([{words}])\n\t'
-            '^pick(~not_well_understood), %user, '
-            'mas ^pick(~search_options):\n\t - {questions}\n'
-            '{group_rejoinders}'
-        ).format(
-            index=(index+1),
-            words=words,
-            questions='\n\t - '.join(questions),
-            group_rejoinders=rejoinders
-        )
+        if len(group_rejoinders) > 1:
+            questions = [question_original[qid] for qid in group]
+
+            gen_rule = (
+                'u: G{index} ([{words}])\n\t'
+                '^pick(~not_well_understood), %user, '
+                'mas ^pick(~search_options):\n\t - {questions}\n'
+                '{group_rejoinders}'
+            ).format(
+                index=(index+1),
+                words=words,
+                questions='\n\t - '.join(questions),
+                group_rejoinders=rejoinders
+            )
+        else:
+            gen_rule = (
+                'u: G{index} ([{words}])\n\t'
+                '^pick(~not_well_understood), %user, '
+                '^pick(~you_mean) "{sugestion}"?\n'
+                '{group_rejoinders}'
+            ).format(
+                index=(index+1),
+                words=words,
+                sugestion=rules_titles[group[0]],
+                group_rejoinders=rejoinders
+            )
+
         generalized_rules.append(gen_rule)
 
     return '\n'.join(generalized_rules)
