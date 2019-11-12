@@ -10,12 +10,6 @@ concept: ~salutation_question_answer ["Estou bem" "Está tudo bem"]
 concept: ~day_period [dia tarde noite manhã]
 concept: ~returning ["Olá novamente" "Olá, que bom que voltou"]
 
-# TIME CONCEPTS
-concept: ~time_period [dia manhã noite tarde "final de semana" "fim de semana" "semana" mês feriado]
-
-# MISC CONCEPTS
-concept: ~you_are_welcome ["De nada" "Por nada" "Estou aqui para lhe ajudar" "Fique à vontade" Disponha "Não há de quê" "Imagina" "Não seja por isso" "Obrigado você" "Eu que agradeço"]
-
 # INFORMAL CONCEPTS
 concept: ~salutation_informal [opa beleza "e aí" "e ai" "e aê" "e ae" "fala aí" "fala ai" "fala aê" "fala ae" "fala tu" "fala mano"]
 concept: ~salutation_informal_answer [opa beleza "e aí" "fala aí" "fala tu" "fala mano"]

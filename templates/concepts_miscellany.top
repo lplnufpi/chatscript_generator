@@ -1,0 +1,5 @@
+# TIME CONCEPTS
+concept: ~time_period [dia manhã noite tarde "final de semana" "fim de semana" "semana" mês feriado]
+
+# MISC CONCEPTS
+concept: ~you_are_welcome ["De nada" "Por nada" "Estou aqui para lhe ajudar" "Fique à vontade" Disponha "Não há de quê" "Imagina" "Não seja por isso" "Obrigado você" "Eu que agradeço"]
