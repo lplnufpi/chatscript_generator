@@ -252,7 +252,8 @@ def generalize(question_rules, question_original, wordembedding):
 
         gen_rule = (
             'u: G{index} ([{words}])\n\t'
-            'Aqui estão alguma opções relacionadas:\n\t - {questions}\n'
+            '^pick(~not_well_understood), %user, '
+            'mas ^pick(~search_options):\n\t - {questions}\n'
             '{group_rejoinders}'
         ).format(
             index=(index+1),

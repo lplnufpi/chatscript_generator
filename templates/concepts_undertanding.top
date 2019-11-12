@@ -1,0 +1,17 @@
+concept: ~not_well_understood [
+    "não entendi bem"
+    "não lhe entendi bem"
+    "não lhe entendi direito"
+    "não consegui lhe entender"
+    "acho que não lhe entendi bem"
+    "não entendi direito o que você deseja"
+    "não consegui lhe entender corretamente"
+    "não consegui lhe entender completamente"
+    "não entendi corretamente o que você deseja"
+]
+
+concept: ~search_options [
+    "aqui estão algumas perguntas relacionadas"
+    "encontrei algumas opções relacionadas à sua busca"
+    "encontrei essas questões relacionadas ao que você digitou"
+]
