@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import wordembedding
 import generalize_rules
-import preprocessing
 
 
 class TestGeneralizeRules(object):
