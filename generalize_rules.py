@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Collection of methods used to generalize rules.
+"""
 import re
 import copy
 import nltk
@@ -9,9 +11,18 @@ from utils import lemmatizer
 
 
 def stem(word):
+    """This methods use RSLPStemmer to stem words.
+
+    Args:
+        word (str): Text to stem.
+
+    Return:
+        str: Stemmed text.
+    """
     stemmer = nltk.stem.RSLPStemmer()
     if word:
         return stemmer.stem(word)
+    return word
 
 
 def group_by_commom_words(sents):
@@ -181,20 +192,34 @@ def group_rules(rules, wordembedding):
 
 
 def get_group_rejoinders(rules_ids, rules):
+    """This method do create rejoinders for rules group.
+
+    Args:
+        rules_ids (list): List of rules indexes for the group.
+        rules (list): List of rules.
+
+    Returns:
+        str: Text ChatScript rejoinder.
+    """
     rejoinders = list()
     words_total = list()
     for index in rules_ids:
+        # Store intentions to add futher
         intentions = re.findall(r'\[.*?\]', rules[index])
         words = re.sub(r'\*~\d+', '', rules[index])
         words = ' '.join(re.sub(r'\[.*?\]', 'INTENTIONS/V', words).split())
 
+        # Removes auxiliary verbs
         tagged = find_keywords.tag_text(words)
         no_aux_verbs = re.sub(r'(\w+/V )(\w+/V)', r'\2', tagged)
         no_tags = re.sub(r'/\w+', '', no_aux_verbs)
         words = no_tags
+
+        # Add stored intentions
         for intention in intentions:
             words = words.replace('INTENTIONS', intention[1:-1])
 
+        # Mount rejoinder
         words = ' '.join(words.split())
         rejoinder = '\ta: ([{}]) \n\t\t^reuse(U{})'.format(words, index+1)
         rejoinders.append(rejoinder)
