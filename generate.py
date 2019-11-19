@@ -7,28 +7,6 @@ import postprocessing
 import generalize_rules
 
 
-def load_questions_answers_pairs(path, lower=True):
-    """Loads the questions file and return a list of tuples containing
-    questions and answers.
-
-    Args:
-        path: Path to questions file.
-
-    Returns:
-        list: List of tuples containg questions and answers.
-    """
-    with open(path, 'r') as arq:
-        text = arq.read().split('\n')
-        lines = list()
-        for t in text:
-            w = t.split(',')
-            if lower:
-                lines.append((w[0].lower(), ','.join(w[1:])))
-            else:
-                lines.append((w[0], ','.join(w[1:])))
-        return lines
-
-
 def load_file(path):
     """Loads file and return its content as list.
 
@@ -41,6 +19,34 @@ def load_file(path):
     with open(path, 'r') as arq:
         text = arq.read().split('\n')
         return text
+
+
+def load_questions(path, lower=True):
+    """Loads the questions file and return a tuple containing
+    a list of questions titles and list of tuples containing questions
+    and answers.
+
+    Args:
+        path: Path to questions file.
+
+    Returns:
+        tutple: List of questions titles and list of tuples containg
+            questions and answers.
+    """
+    questions = list()
+    titles = list()
+    input_lines = load_file(path)
+    for line in input_lines:
+        line_parts = line.split(',')
+
+        title = line_parts[0]
+        titles.append(title)
+
+        answer = ','.join(line_parts[2:])
+        question = line_parts[1].lower() if lower else line_parts[1]
+        questions.append((question, answer))
+
+    return titles, questions
 
 
 def preprocess_questions(qnas, ctx_entities):
@@ -84,22 +90,21 @@ def generate(
     cbow = wordembedding.CBoW()
 
     ctx_entities = load_file(ctx_entities_path)
-    qnas = load_questions_answers_pairs(questions_path)
-    questions_titles = load_file(questions_titles_path)
+    titles, questions = load_questions(questions_path)
 
-    pp_qnas = preprocess_questions(qnas, ctx_entities)
+    pp_qnas = preprocess_questions(questions, ctx_entities)
     original_rules = add_syns.add_syns(pp_qnas, cbow)
     original_rules_text = ''.join(
         [rule for rule in generate_rules(original_rules)]
     )
 
     question_rules = [q for (q, a) in original_rules]
-    question_original = load_questions_answers_pairs(
+    _, question_original = load_questions(
         questions_path, lower=False
     )
     question_original = [q for (q, a) in question_original]
     gen_rules = generalize_rules.generalize(
-        question_rules, question_original, cbow, questions_titles
+        question_rules, question_original, cbow, titles
     )
 
     rules_text = '{}\n\n\n{}'.format(original_rules_text, gen_rules)

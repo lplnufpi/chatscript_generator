@@ -1,10 +1,10 @@
-Como localizo o código do meu vale trocas?,LOCALIZA_CODIGO
-Como funciona a postagem?,POSTAGEM
-Quero postar meu produto.,POSTAR_PRODUTO
-A loja disponibiliza embalagem de presente?,EMBALAGEM_PRESENTE
-Onde solicitar a montagem de bicicleta?,MONTA_BIKE
-O que é Bike Service?,BIKE_SERVICE
-Central de Relacionamento,RELACIONAMENTO
-O que é Nota Fiscal Eletrônica?,NFE
-Como faço para obter a segunda via da Nota Fiscal?,2NFE
-Posso utilizar o Bike Service para qualquer bicicleta?,BIKE_SERVICE_BIKE
+localização do código vale trocas,Como localizo o código do meu vale trocas?,LOCALIZA_CODIGO
+localização do código vale trocas,Como funciona a postagem?,POSTAGEM
+postagem de Produtos,Quero postar meu produto.,POSTAR_PRODUTO
+disponibilização de embalagem para presente,A loja disponibiliza embalagem de presente?,EMBALAGEM_PRESENTE
+montagem de bicicleta,Onde solicitar a montagem de bicicleta?,MONTA_BIKE
+Bike Service,O que é Bike Service?,BIKE_SERVICE
+Central de Relacionamento,Central de Relacionamento,RELACIONAMENTO
+Nota Fiscal Eletrônica,O que é Nota Fiscal Eletrônica?,NFE
+Segunda via da Nota Fiscal Eletrônica,Como faço para obter a segunda via da Nota Fiscal?,2NFE
+Utilização do Bike Service,Posso utilizar o Bike Service para qualquer bicicleta?,BIKE_SERVICE_BIKE
