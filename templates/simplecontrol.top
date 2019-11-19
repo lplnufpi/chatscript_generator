@@ -1,7 +1,10 @@
 # This is the main control script. Start here to trace the ChatScript processing steps.
 # When you see this "#", anything after this is a comment, it is not code that is executed.
 # For example, this line is a comment.
-
+outputmacro: ^save_input(^text)
+^system(
+	python3 /home/jpegx100/develop/lpln/ChatScript/RAWDATA/botin/save_input.py ^substitute(character ^text " " "**") nome nome
+)
 # this function is executed once for every new user chatting with harry
 outputmacro: harry()  # you get harry by default
 # The $cs_token is set to a variety of features I want for tokenizing input.
@@ -16,7 +19,7 @@ $cs_control_main = ~control
 # $cs_control_post = ~XPOSTPROCESS  # uncomment to enable talk
 # The postprocess topic I define will allow windows system to use verbal output
 $userprompt = ^"%user: >"
-$botprompt = ^"BOTNAME: "
+$botprompt = ^"Botin: "
 
 
 # This means, after one output is generated, no more will be reacted to.
