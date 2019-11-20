@@ -22,9 +22,18 @@ def get_topic_keywords(qnas, embedding_model=None):
     similar_questions_kwords = list()
 
     for question, answer in qnas:
-        questions_kwords.extend(
-            re.sub(r'((\*~\d+)|(\[.*?\]))', ' ', question).split()
-        )
+        question_kwords = list()
+        # Obtain keywords
+        aux = re.sub(r'((\*~\d+)|(\[.*?\]))', ' ', question)
+        # Split with two spaces to preserve words pairs
+        for q in aux.split('  '):
+            word = q.strip()
+            if ' ' in word:
+                question_kwords.append('\"{}\"'.format(word))
+            elif word:
+                question_kwords.append(word)
+
+        questions_kwords.extend(question_kwords)
         answer_no_sw = preprocessing.remove_stopwords(answer)
         answers_kwords.extend(
             find_keywords.find_entities(answer_no_sw)
@@ -40,9 +49,10 @@ def get_topic_keywords(qnas, embedding_model=None):
             similar_answers_kwords.extend(word_similars)
 
     result = set(
-        questions_kwords + answers_kwords +
-        similar_answers_kwords + similar_questions_kwords
+        questions_kwords + similar_questions_kwords
+        # + answers_kwords + similar_answers_kwords
     )
+
     return result
 
 
