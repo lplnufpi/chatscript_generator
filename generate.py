@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import os
+import glob
+
 import topics
 import add_syns
 import preprocessing
@@ -81,35 +84,41 @@ def generate_rules(qnas, label='U'):
 
 
 def generate(
-    questions_path='input/faqs.csv',
-    ctx_entities_path='input/ctx_entities.txt',
-    questions_titles_path='input/faqs_titles.txt'
+    ctx_entities_path='input/ctx_entities.txt'
 ):
     """Generate ChatScript files"""
+    input_files = list()
+    dirname = os.path.dirname(os.path.abspath(__file__))
+    dirname = os.path.join(dirname, 'input')
+    input_files = glob.glob('{}*.csv'.format(dirname+os.sep))
 
+    generetad_topics = list()
     cbow = wordembedding.CBoW()
-
     ctx_entities = load_file(ctx_entities_path)
-    titles, questions = load_questions(questions_path)
 
-    pp_qnas = preprocess_questions(questions, ctx_entities)
-    original_rules = add_syns.add_syns(pp_qnas, cbow)
-    original_rules_text = ''.join(
-        [rule for rule in generate_rules(original_rules)]
-    )
+    for questions_path in input_files:
+        titles, questions = load_questions(questions_path)
 
-    question_rules = [q for (q, a) in original_rules]
-    _, question_original = load_questions(
-        questions_path, lower=False
-    )
-    question_original = [q for (q, a) in question_original]
-    gen_rules = generalize_rules.generalize(
-        question_rules, question_original, cbow, titles
-    )
+        pp_qnas = preprocess_questions(questions, ctx_entities)
+        original_rules = add_syns.add_syns(pp_qnas, cbow)
+        original_rules_text = ''.join(
+            [rule for rule in generate_rules(original_rules)]
+        )
 
-    rules_text = '{}\n\n\n{}'.format(original_rules_text, gen_rules)
-    topic = topics.generate_topic(original_rules, rules_text, cbow)
-    postprocessing.save_chatbot_files('Botin', [topic])
+        question_rules = [q for (q, a) in original_rules]
+        _, question_original = load_questions(
+            questions_path, lower=False
+        )
+        question_original = [q for (q, a) in question_original]
+        gen_rules = generalize_rules.generalize(
+            question_rules, question_original, cbow, titles
+        )
+
+        rules_text = '{}\n\n\n{}'.format(original_rules_text, gen_rules)
+        topic = topics.generate_topic(original_rules, rules_text, cbow)
+        generetad_topics.append(topic)
+
+    postprocessing.save_chatbot_files('Botin', generetad_topics)
 
 
 if __name__ == '__main__':

@@ -241,9 +241,15 @@ def get_group_rejoinders(rules_ids, rules, rules_title):
 
     for index in rules_ids:
         pattern = get_rejoinder_pattern(rules[index])
-
+        reuse_rule_label = index+1
         # Mount rejoinder
-        rejoinder = '\ta: ([{}]) \n\t\t^reuse(U{})'.format(pattern, index+1)
+        rejoinder = (
+            '\ta: ([{pattern}])'
+            '\n\t\t$_res = ^save_input(%originalsentence %topic U{rule_label})'
+            '\n\t\t^reuse(U{rule_label})'.format(
+                pattern=pattern, rule_label=reuse_rule_label
+            )
+        )
         rejoinders.append(rejoinder)
         words_total.append(pattern)
 
