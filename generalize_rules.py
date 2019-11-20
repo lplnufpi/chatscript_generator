@@ -215,7 +215,7 @@ def get_rejoinder_pattern(rule):
     return pattern
 
 
-def get_group_rejoinders(rules_ids, rules, rules_title):
+def get_group_rejoinders(rules_ids, rules):
     """This method do create rejoinders for rules group.
 
     Args:
@@ -230,13 +230,16 @@ def get_group_rejoinders(rules_ids, rules, rules_title):
 
     if len(rules_ids) == 1:
         index = rules_ids[0]
+        reuse_rule_label = index+1
         pattern = get_rejoinder_pattern(rules[index])
 
         # Mount rejoinder
         rejoinder = (
-            '\ta: (~yess) ^reuse(U{})'
+            '\ta: (~yess)\n\t\t'
+            '$res = ^save_input($quest %topic U{rule_label})\n\t\t'
+            '^reuse(U{rule_label})'
             '\n\ta: (~noo) Não posso lhe ajudar'
-        ).format(index+1)
+        ).format(rule_label=reuse_rule_label)
         return [rejoinder], [pattern]
 
     for index in rules_ids:
@@ -277,9 +280,7 @@ def generalize(
     groups = group_rules(questions_lower, wordembedding)
 
     for index, group in enumerate(groups):
-        group_rejoinders, words = get_group_rejoinders(
-            group, question_rules, rules_titles
-        )
+        group_rejoinders, words = get_group_rejoinders(group, question_rules)
         words = ' '.join(set(' '.join(words).split()))
         rejoinders = '\n'.join(group_rejoinders)
 
@@ -301,6 +302,7 @@ def generalize(
         else:
             gen_rule = (
                 'u: G{index} ([{words}])\n\t'
+                '$quest = %originalsentence\n\t'
                 '^pick(~not_well_understood), %user, '
                 '^pick(~you_mean) "{sugestion}"?\n'
                 '{group_rejoinders}'
