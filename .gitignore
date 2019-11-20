@@ -5,3 +5,4 @@
 *.mbin
 *.mbin.*
 *.db
+input/*
