@@ -46,10 +46,11 @@ def get_topic_keywords(qnas, embedding_model=None):
     return result
 
 
-def generate_topic(qnas, rules_text, embedding_model):
+def generate_topic(top_name, qnas, rules_text, embedding_model):
     """Generate topic file content.
 
     Args:
+        top_name (str): Name of the topic.
         qnas (list): List of questions and answers.
         gen_qnas (list): List of generalizeds questions.
         embedding_model (wordembedding.WordEmbedding): Word Embedding
@@ -60,7 +61,6 @@ def generate_topic(qnas, rules_text, embedding_model):
     """
     keywords = get_topic_keywords(qnas, embedding_model)
     top_keywords = ' '.join(keywords)
-    top_name = 'faq'
     top_header = u'topic: ~{} keep repeat ({})\n\n'.format(
         top_name, top_keywords
     )

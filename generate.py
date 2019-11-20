@@ -115,7 +115,11 @@ def generate(
         )
 
         rules_text = '{}\n\n\n{}'.format(original_rules_text, gen_rules)
-        topic = topics.generate_topic(original_rules, rules_text, cbow)
+        top_name = questions_path.split(os.sep)[-1]
+        import pdb;pdb.set_trace()
+        topic = topics.generate_topic(
+            top_name, original_rules, rules_text, cbow
+        )
         generetad_topics.append(topic)
 
     postprocessing.save_chatbot_files('Botin', generetad_topics)
