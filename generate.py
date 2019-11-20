@@ -115,8 +115,7 @@ def generate(
         )
 
         rules_text = '{}\n\n\n{}'.format(original_rules_text, gen_rules)
-        top_name = questions_path.split(os.sep)[-1]
-        import pdb;pdb.set_trace()
+        top_name = questions_path.split(os.sep)[-1].split('.')[0]
         topic = topics.generate_topic(
             top_name, original_rules, rules_text, cbow
         )
