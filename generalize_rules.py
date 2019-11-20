@@ -245,7 +245,7 @@ def get_group_rejoinders(rules_ids, rules, rules_title):
         # Mount rejoinder
         rejoinder = (
             '\ta: ([{pattern}])'
-            '\n\t\t$_res = ^save_input(%originalsentence %topic U{rule_label})'
+            '\n\t\t$res = ^save_input($quest %topic U{rule_label})'
             '\n\t\t^reuse(U{rule_label})'.format(
                 pattern=pattern, rule_label=reuse_rule_label
             )
@@ -288,6 +288,7 @@ def generalize(
 
             gen_rule = (
                 'u: G{index} ([{words}])\n\t'
+                '$quest = %originalsentence\n\t'
                 '^pick(~not_well_understood), %user, '
                 'mas ^pick(~search_options):\n\t - {questions}\n'
                 '{group_rejoinders}'
