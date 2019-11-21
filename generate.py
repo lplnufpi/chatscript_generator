@@ -2,6 +2,7 @@
 import os
 import glob
 
+import models
 import topics
 import add_syns
 import preprocessing
@@ -33,23 +34,20 @@ def load_questions(path, lower=True):
         path: Path to questions file.
 
     Returns:
-        tutple: List of questions titles and list of tuples containg
-            questions and answers.
+        List: List of tuples containg titles, questions and answers.
     """
     questions = list()
-    titles = list()
     input_lines = load_file(path)
     for line in input_lines:
         line_parts = line.split(',')
 
         title = line_parts[0]
-        titles.append(title)
 
         answer = ','.join(line_parts[2:])
         question = line_parts[1].lower() if lower else line_parts[1]
-        questions.append((question, answer))
+        questions.append((title, question, answer))
 
-    return titles, questions
+    return questions
 
 
 def preprocess_questions(qnas, ctx_entities):
@@ -67,20 +65,28 @@ def preprocess_questions(qnas, ctx_entities):
         yield pp_question, answer
 
 
-def generate_rules(qnas, label='U'):
+def generate_rules(qnas, ctx_entities, embedding_model):
     """Generate the rules according to ChatScript sintax.
 
     Args:
-        qnas (tuple): Tuple with question and answer.
+        qnas (list): List of tuple with title, question and answer.
+        ctx_entities (list): Context entities.
 
     Yield:
         str: Rule according to ChatScript sintax.
     """
-    i = 0
-    for (question, answer) in qnas:
-        i += 1
-        rule = '\nu: {}{} ({})\n\t{}'.format(label, i, question, answer)
-        yield rule
+    rules = list()
+    for rule_id, (title, question, answer) in enumerate(qnas):
+        rule = models.Rule(
+            rule_id,
+            title,
+            question,
+            answer,
+            ctx_entities,
+            embedding_model
+        )
+        rules.append(rule)
+    return rules
 
 
 def generate(
@@ -97,28 +103,13 @@ def generate(
     ctx_entities = load_file(ctx_entities_path)
 
     for questions_path in input_files:
-        titles, questions = load_questions(questions_path)
+        questions = load_questions(questions_path)
+        rules = generate_rules(questions, ctx_entities, cbow)
 
-        pp_qnas = preprocess_questions(questions, ctx_entities)
-        original_rules = add_syns.add_syns(pp_qnas, cbow)
-        original_rules_text = ''.join(
-            [rule for rule in generate_rules(original_rules)]
-        )
-
-        question_rules = [q for (q, a) in original_rules]
-        _, question_original = load_questions(
-            questions_path, lower=False
-        )
-        question_original = [q for (q, a) in question_original]
-        gen_rules = generalize_rules.generalize(
-            question_rules, question_original, cbow, titles
-        )
-
-        rules_text = '{}\n\n\n{}'.format(original_rules_text, gen_rules)
         top_name = questions_path.split(os.sep)[-1].split('.')[0]
-        topic = topics.generate_topic(
-            top_name, original_rules, rules_text, cbow
-        )
+        topic = models.Topic(top_name, rules)
+        # topic.generalize_rules()
+
         generetad_topics.append(topic)
 
     postprocessing.save_chatbot_files('Botin', generetad_topics)

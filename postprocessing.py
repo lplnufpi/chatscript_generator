@@ -12,11 +12,10 @@ def save_topic_file(topic, botdir):
         topic (str): Topic content.
         botdir (str): Path to dir where to create topic file.
     """
-    top = re.search(r'topic: ~(.*?) ', topic).group(1)
-    top_name = '{}.top'.format(top)
+    top_name = '{}.top'.format(topic.name)
     filename = os.path.join(botdir, top_name)
     with open(filename, 'w') as arq:
-        arq.write(topic)
+        arq.write(topic.__str__())
 
 
 def save_control_knowledge_files(map_values, botdir):
