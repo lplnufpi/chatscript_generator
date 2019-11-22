@@ -3,12 +3,9 @@ import os
 import glob
 
 import models
-import topics
-import add_syns
 import preprocessing
 import wordembedding
 import postprocessing
-import generalize_rules
 
 
 def load_file(path):
@@ -108,7 +105,7 @@ def generate(
 
         top_name = questions_path.split(os.sep)[-1].split('.')[0]
         topic = models.Topic(top_name, rules)
-        # topic.generalize_rules()
+        topic.generalize_rules(cbow)
 
         generetad_topics.append(topic)
 
