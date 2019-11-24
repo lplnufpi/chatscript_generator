@@ -5,7 +5,7 @@ import copy
 import add_syns
 import preprocessing
 import find_keywords
-import generalize_rules2
+import generalize_rules
 
 
 class Rejoinder(object):
@@ -199,7 +199,7 @@ class Topic(object):
             self.keywords.extend(rule.keywords)
 
     def generalize_rules(self, wordembedding):
-        self.generalized_rules = generalize_rules2.generalize(
+        self.generalized_rules = generalize_rules.generalize(
             self.rules, wordembedding
         )
 

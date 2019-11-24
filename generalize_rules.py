@@ -5,6 +5,7 @@ import re
 import copy
 import nltk
 
+import models
 import preprocessing
 import find_keywords
 from utils import lemmatizer
@@ -132,25 +133,16 @@ def group_rules(rules, wordembedding):
     Returns:
         list: List with groups.
     """
-    no_punctuation = [
-        ' '.join(preprocessing.remove_punctation(
-            nltk.word_tokenize(rule)
-        )) for rule in rules
-    ]
-    no_stopwords = [
-        preprocessing.remove_stopwords(rule) for rule in no_punctuation
-    ]
-
     entities = list()
-    for rule in no_stopwords:
-        entity = ' '.join(find_keywords.find_entities(rule))
-        if entity:
-            entities.append(entity)
+    for rule in rules:
+        if rule.entities:
+            entities.append(' '.join(rule.entities))
         else:
-            # If there is no entities found append the rule itself
-            entities.append(rule)
-    lemmas = [lemmatizer.lemmatize(rule) for rule in entities]
+            entities.append(rule.nosw_question)
 
+    lemmas = [lemmatizer.lemmatize(entity) for entity in entities]
+
+    # Obtains every question keywords added with it's lemmas and stems
     questions_keywords = list()
     for lemma in lemmas:
         words = re.split(r'[ \n/]', lemma)
@@ -160,35 +152,19 @@ def group_rules(rules, wordembedding):
         if '' in set_words:
             set_words.remove('')
         questions_keywords.append(set_words)
-        # import pdb; pdb.set_trace()
 
     # Grouping only by similarity once similarity englobs common_words
-    sents_group_common = list()
-    for nosw in no_stopwords:
-        words_nosw = set([
-            w for w in nosw.split()
-            if find_keywords.has_tag(w, 'N') or find_keywords.has_tag(w, 'NPROP')
-        ])
-        sents_group_common.append(words_nosw)
-
-    groups_common = group_by_commom_words(sents_group_common)
     groups_similarity = group_by_similarity(questions_keywords, wordembedding)
-    groups_similarity_cp = copy.deepcopy(groups_similarity)
+    rules_groups = list()
+    for group in groups_similarity:
+        rules_group = list()
+        for rule_id in group:
+            rules_group.append(
+                [rule for rule in rules if rule.rule_id == rule_id][0]
+            )
+        rules_groups.append(rules_group)
 
-    for i in range(len(groups_similarity_cp)):
-        for j in range(len(groups_similarity_cp[i])):
-            for k in range(len(groups_common)):
-                if groups_similarity_cp[i][j] in groups_common[k]:
-                    groups_similarity[i].extend(groups_common[k])
-
-    groups_final = list()
-    groups = [list(set(w)) for w in groups_similarity]
-    while groups:
-        group = groups.pop(0)
-        if group not in groups_final:
-            groups_final.append(group)
-
-    return groups_final
+    return rules_groups
 
 
 def get_rejoinder_pattern(rule):
@@ -215,53 +191,7 @@ def get_rejoinder_pattern(rule):
     return pattern
 
 
-def get_group_rejoinders(rules_ids, rules):
-    """This method do create rejoinders for rules group.
-
-    Args:
-        rules_ids (list): List of rules indexes for the group.
-        rules (list): List of rules.
-
-    Returns:
-        str: Text ChatScript rejoinder.
-    """
-    rejoinders = list()
-    words_total = list()
-
-    if len(rules_ids) == 1:
-        index = rules_ids[0]
-        reuse_rule_label = index+1
-        pattern = get_rejoinder_pattern(rules[index])
-
-        # Mount rejoinder
-        rejoinder = (
-            '\ta: (~yess)\n\t\t'
-            '$res = ^save_input($quest %topic U{rule_label})\n\t\t'
-            '^reuse(U{rule_label})'
-            '\n\ta: (~noo) Não posso lhe ajudar'
-        ).format(rule_label=reuse_rule_label)
-        return [rejoinder], [pattern]
-
-    for index in rules_ids:
-        pattern = get_rejoinder_pattern(rules[index])
-        reuse_rule_label = index+1
-        # Mount rejoinder
-        rejoinder = (
-            '\ta: ([{pattern}])'
-            '\n\t\t$res = ^save_input($quest %topic U{rule_label})'
-            '\n\t\t^reuse(U{rule_label})'.format(
-                pattern=pattern, rule_label=reuse_rule_label
-            )
-        )
-        rejoinders.append(rejoinder)
-        words_total.append(pattern)
-
-    return rejoinders, words_total
-
-
-def generalize(
-    question_rules, question_original, wordembedding, rules_titles
-):
+def generalize(rules, wordembedding):
     """Generalize the rules.
 
     Args:
@@ -276,43 +206,9 @@ def generalize(
         str: Rule generalized.
     """
     generalized_rules = list()
-    questions_lower = [rule.lower() for rule in question_original]
-    groups = group_rules(questions_lower, wordembedding)
+    rules_groups = group_rules(rules, wordembedding)
 
-    for index, group in enumerate(groups):
-        group_rejoinders, words = get_group_rejoinders(group, question_rules)
-        words = ' '.join(set(' '.join(words).split()))
-        rejoinders = '\n'.join(group_rejoinders)
-
-        if len(group_rejoinders) > 1:
-            questions = [question_original[qid] for qid in group]
-
-            gen_rule = (
-                'u: G{index} ([{words}])\n\t'
-                '$quest = %originalsentence\n\t'
-                '^pick(~not_well_understood), %user, '
-                'mas ^pick(~search_options):\n\t - {questions}\n'
-                '{group_rejoinders}'
-            ).format(
-                index=(index+1),
-                words=words,
-                questions='\n\t - '.join(questions),
-                group_rejoinders=rejoinders
-            )
-        else:
-            gen_rule = (
-                'u: G{index} ([{words}])\n\t'
-                '$quest = %originalsentence\n\t'
-                '^pick(~not_well_understood), %user, '
-                '^pick(~you_mean) "{sugestion}"?\n'
-                '{group_rejoinders}'
-            ).format(
-                index=(index+1),
-                words=words,
-                sugestion=rules_titles[group[0]],
-                group_rejoinders=rejoinders
-            )
-
+    for index, group in enumerate(rules_groups):
+        gen_rule = models.GenericRule(index, group)
         generalized_rules.append(gen_rule)
-
-    return '\n'.join(generalized_rules)
+    return generalized_rules
