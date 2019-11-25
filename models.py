@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
-import copy
+import nltk
 
+from utils import utils
 import add_syns
 import preprocessing
 import find_keywords
@@ -52,6 +53,7 @@ class Rule(object):
     entities = None
     intentions = None
     intentions_syns_dict = None
+    _entities_singular = None
 
     def __init__(
         self, rule_id, title, question,
@@ -68,6 +70,8 @@ class Rule(object):
         self.find_intentions_entities()
         self.add_syns(embedding_model)
         self.label = label_type + str(rule_id)
+        self._entities_singular = list()
+
 
     def do_preprocessing(self):
         self.ppcd_question = preprocessing.preprocess(
@@ -128,18 +132,29 @@ class GenericRule(object):
     label_type = None
     rejoinders = None
 
-    def __init__(self, rule_id, group, label_type='G'):
+    def __init__(
+        self, rule_id, group, label_type='G', common_entities=None
+    ):
         self.rule_id = rule_id
         self.label_type = label_type
         self.label = label_type + str(rule_id)
         self.group = group
-        words = list()
-        for rule in group:
-            words.extend(rule.keywords)
-
-        self.words = ' '.join(set(words))
         self.questions = [rule.original_question for rule in group]
+        self.generate_words(group, common_entities=common_entities)
         self.generate_rejoinders()
+
+    def generate_words(self, group, common_entities=None):
+        if common_entities:
+            words = set(group[0].entities)
+            for rule in group:
+                words = words & set(rule.entities)
+            words = words - common_entities
+            self.words = ' '.join(words)
+        else:
+            words = list()
+            for rule in group:
+                words.extend(rule.keywords)
+            self.words = ' '.join(set(words))
 
     def generate_rejoinders(self):
         self.rejoinders = list()

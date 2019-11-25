@@ -122,6 +122,53 @@ def group_by_similarity(sents, wordembedding):
     return common_words + non_commom
 
 
+def get_all_entities(rules):
+    all_entities = list()
+
+    entities = list()
+    for rule in rules:
+        entities.extend(rule.entities)
+
+    for ent in entities:
+        all_entities.extend(ent.split())
+
+    return all_entities
+
+
+def get_rules_common_entities(entities):
+    freqdist = nltk.FreqDist(entities)
+    common_words = [word for word, dist in freqdist.most_common() if dist > 2]
+    return set(common_words)
+
+
+def print_group(groups):
+    for key, rules in groups.items():
+        text = [rule.original_question for rule in rules]
+        print('{}: [{}]'.format(key, text))
+
+
+def group_by_entities(rules):
+    entities = get_all_entities(rules)
+    common_entities = get_rules_common_entities(entities)
+    groups = dict()
+    keywords = list()
+    for rule in rules:
+        keywords.extend(
+            [ent for ent in set(entities) if ent not in common_entities]
+        )
+
+    for keyword in set(keywords):
+        group = list()
+        for rule in rules:
+            for entity in rule.entities:
+                if re.search(keyword, entity) or re.search(keyword[:-1], entity):
+                    group.append(rule)
+                    break
+        groups[keyword] = group
+    print_group(groups)
+    return groups.values(), common_entities
+
+
 def group_rules(rules, wordembedding):
     """Group rules that refer to same entity.
 
@@ -133,6 +180,8 @@ def group_rules(rules, wordembedding):
     Returns:
         list: List with groups.
     """
+    return group_by_entities(rules)
+
     entities = list()
     for rule in rules:
         if rule.entities:
@@ -140,8 +189,20 @@ def group_rules(rules, wordembedding):
         else:
             entities.append(rule.nosw_question)
 
-    lemmas = [lemmatizer.lemmatize(entity) for entity in entities]
+    entities_words = list()
+    for ent in entities:
+        entities_words.extend(ent.split())
 
+    freqdist = nltk.FreqDist(entities_words)
+    common_words = [word for word, dist in freqdist.most_common() if dist > 2]
+    entities_no_common = list()
+    for entity in entities:
+        ent = entity
+        for word in common_words:
+            ent = ent.replace(word, '')
+        entities_no_common.append(ent)
+
+    lemmas = [lemmatizer.lemmatize(entity) for entity in entities_no_common]
     # Obtains every question keywords added with it's lemmas and stems
     questions_keywords = list()
     for lemma in lemmas:
@@ -206,9 +267,11 @@ def generalize(rules, wordembedding):
         str: Rule generalized.
     """
     generalized_rules = list()
-    rules_groups = group_rules(rules, wordembedding)
+    rules_groups, common_entities = group_rules(rules, wordembedding)
 
     for index, group in enumerate(rules_groups):
-        gen_rule = models.GenericRule(index, group)
+        gen_rule = models.GenericRule(
+            index, group, common_entities=common_entities
+        )
         generalized_rules.append(gen_rule)
     return generalized_rules
