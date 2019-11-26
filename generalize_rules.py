@@ -150,23 +150,33 @@ def print_group(groups):
 def group_by_entities(rules):
     entities = get_all_entities(rules)
     common_entities = get_rules_common_entities(entities)
-    groups = dict()
+    groups = list()
     keywords = list()
+
     for rule in rules:
         keywords.extend(
             [ent for ent in set(entities) if ent not in common_entities]
         )
 
+    added_rules = list()
     for keyword in set(keywords):
-        group = list()
+        rules_group = list()
         for rule in rules:
             for entity in rule.entities:
                 if re.search(keyword, entity) or re.search(keyword[:-1], entity):
-                    group.append(rule)
+                    rules_group.append(rule)
                     break
-        groups[keyword] = group
-    print_group(groups)
-    return groups.values(), common_entities
+
+        # Verify added rules to unite groups with same rules
+        if rules_group not in added_rules:
+            added_rules.append(rules_group)
+            groups.append(models.Group(rules_group, keyword))
+        else:
+            for group in groups:
+                if group.rules == rules_group:
+                    group.entity = group.entity + ' ' + keyword
+
+    return groups
 
 
 def group_rules(rules, wordembedding):
@@ -180,7 +190,6 @@ def group_rules(rules, wordembedding):
     Returns:
         list: List with groups.
     """
-    return group_by_entities(rules)
 
     entities = list()
     for rule in rules:
@@ -267,11 +276,10 @@ def generalize(rules, wordembedding):
         str: Rule generalized.
     """
     generalized_rules = list()
-    rules_groups, common_entities = group_rules(rules, wordembedding)
+    groups = group_by_entities(rules)
 
-    for index, group in enumerate(rules_groups):
-        gen_rule = models.GenericRule(
-            index, group, common_entities=common_entities
-        )
+    for index, group in enumerate(groups):
+        gen_rule = models.GenericRule(index, group.rules, group.entity)
         generalized_rules.append(gen_rule)
+
     return generalized_rules

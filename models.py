@@ -133,34 +133,28 @@ class GenericRule(object):
     rejoinders = None
 
     def __init__(
-        self, rule_id, group, label_type='G', common_entities=None
+        self, rule_id, group, words, label_type='G'
     ):
         self.rule_id = rule_id
         self.label_type = label_type
         self.label = label_type + str(rule_id)
         self.group = group
         self.questions = [rule.original_question for rule in group]
-        self.generate_words(group, common_entities=common_entities)
+        self.words = words
         self.generate_rejoinders()
 
-    def generate_words(self, group, common_entities=None):
-        if common_entities:
-            words = set(group[0].entities)
-            for rule in group:
-                words = words & set(rule.entities)
-            words = words - common_entities
-            self.words = ' '.join(words)
-        else:
-            words = list()
-            for rule in group:
-                words.extend(rule.keywords)
-            self.words = ' '.join(set(words))
 
     def generate_rejoinders(self):
         self.rejoinders = list()
         if len(self.group) > 1:
+            group_entities = self.words.split()
             for rule in self.group:
-                keywords = ' '.join(rule.keywords)
+                # Remove common questions keywords to improve distinction
+                keywords = [
+                    kw for kw in rule.keywords if kw not in group_entities
+                ]
+                keywords = ' '.join(keywords)
+
                 rej = Rejoinder(rule.label, keywords)
                 self.rejoinders.append(rej)
         else:
@@ -199,6 +193,15 @@ class GenericRule(object):
             )
 
         return gen_rule
+
+
+class Group(object):
+    rules = None
+    entity = None
+
+    def __init__(self, rules, entity):
+        self.rules = rules
+        self.entity = entity
 
 
 class Topic(object):
