@@ -5,6 +5,12 @@ outputmacro: ^save_input(^text ^topic ^rule)
 ^system(
 	python3 /home/jpegx100/develop/lpln/ChatScript/RAWDATA/botin/save_input.py ^substitute(character ^text " " "**") ^topic ^rule
 )
+
+outputmacro: ^search_rule(^text ^topic)
+^system(
+	python3 /home/jpegx100/develop/lpln/ChatScript/RAWDATA/botin/search_rule.py ^text ^topic;
+)
+
 # this function is executed once for every new user chatting with harry
 outputmacro: harry()  # you get harry by default
 # The $cs_token is set to a variety of features I want for tokenizing input.

@@ -6,6 +6,7 @@ import models
 import preprocessing
 import wordembedding
 import postprocessing
+import generalize_rules
 
 
 def load_file(path):
@@ -105,9 +106,12 @@ def generate(
 
         top_name = questions_path.split(os.sep)[-1].split('.')[0]
         topic = models.Topic(top_name, rules)
-        topic.generalize_rules(cbow)
+
+        gen_rules = generalize_rules.generalize(topic, wordembedding)
+        gen_topic = models.Topic(top_name+'_gen', gen_rules)
 
         generetad_topics.append(topic)
+        generetad_topics.append(gen_topic)
 
     postprocessing.save_chatbot_files('Botin', generetad_topics)
 

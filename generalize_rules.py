@@ -261,7 +261,7 @@ def get_rejoinder_pattern(rule):
     return pattern
 
 
-def generalize(rules, wordembedding):
+def generalize(topic, wordembedding):
     """Generalize the rules.
 
     Args:
@@ -276,10 +276,12 @@ def generalize(rules, wordembedding):
         str: Rule generalized.
     """
     generalized_rules = list()
-    groups = group_by_entities(rules)
+    groups = group_by_entities(topic.rules)
 
     for index, group in enumerate(groups):
-        gen_rule = models.GenericRule(index, group.rules, group.entity)
+        gen_rule = models.GenericRule(
+            index, group.rules, group.entity, topic.name
+        )
         generalized_rules.append(gen_rule)
 
     return generalized_rules

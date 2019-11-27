@@ -131,9 +131,10 @@ class GenericRule(object):
     label = None
     label_type = None
     rejoinders = None
+    original_topic_name = None
 
     def __init__(
-        self, rule_id, group, words, label_type='G'
+        self, rule_id, group, words, original_topic_name, label_type='G'
     ):
         self.rule_id = rule_id
         self.label_type = label_type
@@ -141,6 +142,7 @@ class GenericRule(object):
         self.group = group
         self.questions = [rule.original_question for rule in group]
         self.words = words
+        self.original_topic_name = original_topic_name
         self.generate_rejoinders()
 
 
@@ -154,12 +156,15 @@ class GenericRule(object):
                     kw for kw in rule.keywords if kw not in group_entities
                 ]
                 keywords = ' '.join(keywords)
-
-                rej = Rejoinder(rule.label, keywords)
-                self.rejoinders.append(rej)
+                label = '~{}.{}'.format(self.original_topic_name, rule.label)
         else:
-            rej = Rejoinder(self.group[0].label)
-            self.rejoinders.append(rej)
+            keywords = None
+            label = '~{}.{}'.format(
+                self.original_topic_name, self.group[0].label
+            )
+
+        rej = Rejoinder(label, keywords)
+        self.rejoinders.append(rej)
 
     def rejoinders_text(self):
         return '\n'.join([ref.__str__() for ref in self.rejoinders])
@@ -206,20 +211,19 @@ class Group(object):
 
 class Topic(object):
     name = None
-    keywords = list()
+    keywords = None
     rules = None
-    generalized_rules = list()
 
     def __init__(self, name, rules):
         self.name = name
         self.rules = rules
-        for rule in self.rules:
-            self.keywords.extend(rule.keywords)
+        self.keywords = list()
 
-    def generalize_rules(self, wordembedding):
-        self.generalized_rules = generalize_rules.generalize(
-            self.rules, wordembedding
-        )
+        if self.name.endswith('_gen'):
+            self.keywords.append('REGRAS_GENERICAS')
+        else:
+            for rule in self.rules:
+                self.keywords.extend(rule.keywords)
 
     def __str__(self):
         top_header = u'topic: ~{} keep repeat ({})\n\n'.format(
@@ -227,8 +231,17 @@ class Topic(object):
         )
 
         rules_text = '\n'.join([rule.__str__() for rule in self.rules])
-        gen_rules_text = '\n'.join(
-            [rule.__str__() for rule in self.generalized_rules]
-        )
+        if self.name.endswith('_gen'):
+            search_rule_text = ''
+        else:
+            search_rule_text = (
+                'u: SEARCH_RULE ()\n'
+                '   $res = ^search_rule(%originalsentence %topic) / 256\n'
+                '   if($res>-1){{\n'
+                '       ^reuse(^join(U $res))\n'
+                '   }}else{{\n'
+                '       ^respond(~{name})\n'
+                '   }}\n'
+            ).format(name=self.name)
 
-        return top_header + rules_text + '\n\n\n' + gen_rules_text
+        return top_header + rules_text + '\n\n\n' + search_rule_text
