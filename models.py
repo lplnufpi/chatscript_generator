@@ -213,6 +213,7 @@ class Topic(object):
     name = None
     keywords = None
     rules = None
+    max_return_code = 100
 
     def __init__(self, name, rules):
         self.name = name
@@ -237,11 +238,11 @@ class Topic(object):
             search_rule_text = (
                 'u: SEARCH_RULE ()\n'
                 '   $res = ^search_rule(%originalsentence %topic) / 256\n'
-                '   if($res>-1){{\n'
+                '   if($res<{max_return}){{\n'
                 '       ^reuse(^join(U $res))\n'
                 '   }}else{{\n'
                 '       ^respond(~{name})\n'
                 '   }}\n'
-            ).format(name=self.name)
+            ).format(name=self.name+'_gen', max_return=self.max_return_code)
 
         return top_header + rules_text + '\n\n\n' + search_rule_text
