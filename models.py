@@ -237,12 +237,12 @@ class Topic(object):
         else:
             search_rule_text = (
                 'u: SEARCH_RULE ()\n'
-                '   $res = ^search_rule(%originalsentence %topic) / 256\n'
-                '   if($res<{max_return}){{\n'
-                '       ^reuse(^join(U $res))\n'
-                '   }}else{{\n'
-                '       ^respond(~{name})\n'
-                '   }}\n'
+                '\t$res = ^search_rule(%originalsentence %topic) / 256\n'
+                '\tif($res<{max_return}){{\n'
+                '\t\t^reuse(^join(U $res))\n'
+                '\t}}else{{\n'
+                '\t\t^respond(~{name})\n'
+                '\t}}\n'
             ).format(name=self.name+'_gen', max_return=self.max_return_code)
 
         return top_header + rules_text + '\n\n\n' + search_rule_text
