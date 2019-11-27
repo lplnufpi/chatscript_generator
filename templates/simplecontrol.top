@@ -8,7 +8,7 @@ outputmacro: ^save_input(^text ^topic ^rule)
 
 outputmacro: ^search_rule(^text ^topic)
 ^system(
-	python3 /home/jpegx100/develop/lpln/ChatScript/RAWDATA/botin/search_rule.py ^text ^topic;
+	python3 /home/jpegx100/develop/lpln/ChatScript/RAWDATA/botin/search_rule.py ^substitute(character ^text " " "**") ^topic
 )
 
 # this function is executed once for every new user chatting with harry
