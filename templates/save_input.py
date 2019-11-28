@@ -1,10 +1,14 @@
-import dataset
+# -*- coding: utf-8 -*-
+"""Module to sabe usar input in database."""
 import sys
 
+import dataset
+import preprocess
+
 db = dataset.connect('sqlite:///user_inputs.db')
-#Muda o nome do DB
 table = db['inputs']
 entrada = sys.argv[1].replace('**', ' ')
+entrada = preprocess.preprocess(entrada)
 regra = sys.argv[3][1:] if len(sys.argv) == 4 else ''
 topic = sys.argv[2].split('_gen')[0]
 
