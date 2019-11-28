@@ -48,7 +48,7 @@ def group_by_entities(rules, keywords):
     groups = list()
 
     added_rules = list()
-    for keyword in set(keywords):
+    for keyword in keywords:
         rules_group = list()
         for rule in rules:
             for entity in rule.entities:
@@ -71,31 +71,53 @@ def group_by_entities(rules, keywords):
     return groups
 
 
-def sort_by_entities(rules, keywords):
-    groups = list()
+def get_singular_or_plural(word, keywords):
+    if word+'s' in keywords:
+        return word+'s'
+    elif word.endswith('s'):
+        return word[:-1]
+    return None
 
-    added_rules = list()
-    for keyword in set(keywords):
-        rules_group = list()
-        for rule in rules:
-            for entity in rule.entities:
-                if (
-                    re.search(keyword, entity) or
-                    re.search(keyword[:-1], entity)
-                ):
-                    rules_group.append(rule)
-                    break
 
-        # Verify added rules to unite groups with same rules
-        if rules_group not in added_rules:
-            added_rules.append(rules_group)
-            groups.append(models.Group(rules_group, keyword))
-        else:
-            for group in groups:
-                if group.rules == rules_group:
-                    group.entity = group.entity + ' ' + keyword
+def get_entity_pattern(entity, keywords):
 
-    return groups
+    result_parts = [entity]
+    entity_parts = entity.split()
+
+    for part in entity_parts:
+        sp = get_singular_or_plural(part, keywords)
+        if sp:
+            result_parts.append(sp)
+    if len(result_parts) > 1:
+        return '[{}]'.format(' '.join(result_parts))
+    return ' '.join(result_parts)
+
+
+def sort_by_entities(rules):
+    result_rules = list()
+    keywords = get_keywords(rules)
+    all_entities = get_all_entities(rules)
+    common_words = get_rules_common_entities(all_entities)
+
+    sorted_rules = sorted(rules, key=lambda r: len(r.entities), reverse=True)
+    for rule in sorted_rules:
+        try:
+            entities = sorted(
+                rule.entities,
+                key=lambda ent: rule.original_question.index(ent) if ent in rule.original_question else 1000
+            )
+        except:
+            import pdb;pdb.set_trace()
+        entities = [ent for ent in entities if ent not in common_words]
+        pattern_entts = [get_entity_pattern(ent, keywords) for ent in entities]
+        pattern = ' * '.join(pattern_entts)
+
+        nrule = models.Rule(
+            rule.rule_id, '', '', rule.answer, None, None, label_type='S',
+            add_syns_question=pattern
+        )
+        result_rules.append(nrule)
+    return result_rules
 
 
 def generalize(topic, wordembedding):
@@ -114,7 +136,7 @@ def generalize(topic, wordembedding):
     """
     generalized_rules = list()
     keywords = get_keywords(topic.rules)
-    groups = group_by_entities(topic.rules, keywords)
+    groups = group_by_entities(topic.rules, set(keywords))
 
     for index, group in enumerate(groups):
         gen_rule = models.GenericRule(

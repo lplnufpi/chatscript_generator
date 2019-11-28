@@ -104,11 +104,15 @@ def generate(
         questions = load_questions(questions_path)
         rules = generate_rules(questions, ctx_entities, cbow)
 
+        sorted_rules = generalize_rules.sort_by_entities(rules)
+
         top_name = questions_path.split(os.sep)[-1].split('.')[0]
         topic = models.Topic(top_name, rules)
 
         gen_rules = generalize_rules.generalize(topic, wordembedding)
         gen_topic = models.Topic(top_name+'_gen', gen_rules)
+
+        topic.rules.extend(sorted_rules)
 
         generetad_topics.append(topic)
         generetad_topics.append(gen_topic)

@@ -56,8 +56,8 @@ class Rule(object):
     _entities_singular = None
 
     def __init__(
-        self, rule_id, title, question,
-        answer, ctx_entities, embedding_model, label_type='U'
+        self, rule_id, title, question, answer, ctx_entities,
+        embedding_model, label_type='U', add_syns_question=None
     ):
         self.label_type = label_type
         self.rule_id = rule_id
@@ -65,13 +65,15 @@ class Rule(object):
         self.original_question = question
         self.answer = answer
         self.ctx_entities = ctx_entities
-
-        self.do_preprocessing()
-        self.find_intentions_entities()
-        self.add_syns(embedding_model)
         self.label = label_type + str(rule_id)
-        self._entities_singular = list()
 
+        if add_syns_question is None:
+            self.do_preprocessing()
+            self.find_intentions_entities()
+            self.add_syns(embedding_model)
+            self._entities_singular = list()
+        else:
+            self.add_syns_question = add_syns_question
 
     def do_preprocessing(self):
         self.ppcd_question = preprocessing.preprocess(
@@ -83,6 +85,12 @@ class Rule(object):
         self.nosw_question = re.sub(r'\*~\d+', '', self.ppcd_question)
 
         self.entities = find_keywords.find_entities(self.nosw_question)
+
+        self.splited_entities = list()
+        for ent in self.entities:
+            self.splited_entities.extend(ent.split())
+        self.splited_entities = set(self.splited_entities)
+
         self.intentions = find_keywords.find_intention(
             self.nosw_question, self.entities
         )
@@ -113,8 +121,9 @@ class Rule(object):
 
     def __str__(self):
         text = (
-            'u: {label} ({rule})\n\t{answer}'
+            '{extra_space}u: {label} ({rule})\n\t{answer}'
         ).format(
+            extra_space='\n'*2 if self.rule_id == 0 else '',
             label=self.label,
             id=self.rule_id,
             rule=self.add_syns_question,
@@ -144,7 +153,6 @@ class GenericRule(object):
         self.words = words
         self.original_topic_name = original_topic_name
         self.generate_rejoinders()
-
 
     def generate_rejoinders(self):
         self.rejoinders = list()
@@ -227,7 +235,7 @@ class Topic(object):
                 self.keywords.extend(rule.keywords)
 
     def __str__(self):
-        top_header = u'topic: ~{} keep repeat ({})\n\n'.format(
+        top_header = u'topic: ~{} keep repeat ({})\n'.format(
             self.name, ' '.join(set(self.keywords))
         )
 
