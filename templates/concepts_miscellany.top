@@ -28,3 +28,20 @@ concept: ~you_mean [
     "você quer saber sobre"
     "você quer informações sobre"
 ]
+
+concept: ~cant_help [
+    "infelizmente não posso lhe ajudar"
+    "desculpe não poder lhe ajudar"
+]
+
+concept: ~not_ready_yet [
+    "sou novo nesse trabalho"
+    "ainda estou sendo treinado"
+    "meus parafusos ainda não estão bem apertados"
+]
+
+concept: ~tranfeer [
+    "vou tranferir você para um atendente que irá lhe ajudar"
+    "estou lhe transferindo para um atendente que lhe ajudará"
+    "um atendente humano irá lhe auxiliar a partir de agora"
+]

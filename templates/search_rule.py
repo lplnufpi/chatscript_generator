@@ -17,7 +17,7 @@ if __name__ == '__main__':
     user_input = sys.argv[1].replace('**', ' ')
     ppsd_input = preprocess.preprocess(user_input)
 
-    result = table.find_one(topico=topic, entrada_usuario=user_input)
+    result = table.find_one(topico=topic, entrada_processada=user_input)
     if result and result['regra']:
         code = int(re.search(r'\d+', result['regra']).group())
 

@@ -22,8 +22,13 @@ class Rejoinder(object):
             pattern = '[{}]'.format(self.pattern)
             cant_help = ''
         else:
-            pattern = '~yess'
-            cant_help = '\n\ta: (~noo) Não posso lhe ajudar'
+            pattern = '[~yess ~adv_afirmacao]'
+            cant_help = (
+                '\n\ta: ([~noo ~adv_negacao])\n\t'
+                '   $err = ^save_input_error($quest %topic)\n\t'
+                '   ^pick(~cant_help), ^pick(~not_ready_yet), mas '
+                '^pick(~tranfeer)'
+            )
 
         string = (
             '\ta: ({pattern})\n\t'
@@ -104,6 +109,10 @@ class Rule(object):
         )
 
     @property
+    def nospace_question(self):
+        return self.nosw_question.replace('  ', ' ')
+
+    @property
     def intentions_syns_list(self):
         intentions = list()
         for _, value in self.intentions_syns_dict.items():
@@ -121,12 +130,13 @@ class Rule(object):
 
     def __str__(self):
         text = (
-            '{extra_space}u: {label} ({rule})\n\t{answer}'
+            '{extra_space}u: {label} ({rule}){space}{answer}'
         ).format(
             extra_space='\n'*2 if self.rule_id == 0 else '',
             label=self.label,
             id=self.rule_id,
             rule=self.add_syns_question,
+            space='\n\t' if self.label_type != 'S' else ' ',
             answer=self.answer
         )
         return text
@@ -157,22 +167,26 @@ class GenericRule(object):
     def generate_rejoinders(self):
         self.rejoinders = list()
         if len(self.group) > 1:
+            all_words = set()
             group_entities = self.words.split()
             for rule in self.group:
                 # Remove common questions keywords to improve distinction
                 keywords = [
-                    kw for kw in rule.keywords if kw not in group_entities
+                    kw for kw in rule.keywords if kw not in group_entities and kw not in all_words
                 ]
+                all_words.update(keywords)
                 keywords = ' '.join(keywords)
                 label = '~{}.{}'.format(self.original_topic_name, rule.label)
+                rej = Rejoinder(label, keywords)
+                self.rejoinders.append(rej)
+            # Do remove repeated words in multiple rejoinders
         else:
             keywords = None
             label = '~{}.{}'.format(
                 self.original_topic_name, self.group[0].label
             )
-
-        rej = Rejoinder(label, keywords)
-        self.rejoinders.append(rej)
+            rej = Rejoinder(label, keywords)
+            self.rejoinders.append(rej)
 
     def rejoinders_text(self):
         return '\n'.join([ref.__str__() for ref in self.rejoinders])
@@ -230,13 +244,19 @@ class Topic(object):
 
         if self.name.endswith('_gen'):
             self.keywords.append('REGRAS_GENERICAS')
+            self.random = 'random '
         else:
+            self.random = ''
             for rule in self.rules:
                 self.keywords.extend(rule.keywords)
 
     def __str__(self):
-        top_header = u'topic: ~{} keep repeat ({})\n'.format(
-            self.name, ' '.join(set(self.keywords))
+        top_header = (
+            u'topic: ~{name} keep repeat {random}({keywords})\n'
+        ).format(
+            name=self.name,
+            random=self.random,
+            keywords=' '.join(set(self.keywords))
         )
 
         rules_text = '\n'.join([rule.__str__() for rule in self.rules])

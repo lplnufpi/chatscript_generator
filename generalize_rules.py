@@ -81,16 +81,29 @@ def get_singular_or_plural(word, keywords):
 
 def get_entity_pattern(entity, keywords):
 
-    result_parts = [entity]
     entity_parts = entity.split()
+
+    if len(entity_parts) > 1:
+        result = '"{}"'
+    else:
+        result = '{}'
+
+    original = result.format(entity)
+    plural = list()
 
     for part in entity_parts:
         sp = get_singular_or_plural(part, keywords)
         if sp:
-            result_parts.append(sp)
-    if len(result_parts) > 1:
-        return '[{}]'.format(' '.join(result_parts))
-    return ' '.join(result_parts)
+            plural.append(sp)
+
+    if plural:
+        text_result = '[{}]'.format(
+            original + ' ' + result.format(' '.join(plural))
+        )
+    else:
+        text_result = original
+
+    return text_result
 
 
 def sort_by_entities(rules):
@@ -101,19 +114,18 @@ def sort_by_entities(rules):
 
     sorted_rules = sorted(rules, key=lambda r: len(r.entities), reverse=True)
     for rule in sorted_rules:
-        try:
-            entities = sorted(
-                rule.entities,
-                key=lambda ent: rule.original_question.index(ent) if ent in rule.original_question else 1000
-            )
-        except:
-            import pdb;pdb.set_trace()
-        entities = [ent for ent in entities if ent not in common_words]
+        entities = [ent for ent in rule.entities if ent not in common_words]
+        entities = sorted(
+            entities,
+            key=lambda ent: rule.nospace_question.index(ent) if ent in rule.nospace_question else 1000
+        )
         pattern_entts = [get_entity_pattern(ent, keywords) for ent in entities]
         pattern = ' * '.join(pattern_entts)
 
         nrule = models.Rule(
-            rule.rule_id, '', '', rule.answer, None, None, label_type='S',
+            rule.rule_id, '', '',
+            '^reuse(U{})'.format(rule.rule_id),
+            None, None, label_type='S',
             add_syns_question=pattern
         )
         result_rules.append(nrule)
