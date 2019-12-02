@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 import re
-import nltk
 
 import add_syns
 import preprocessing
 import find_keywords
-import generalize_rules
 
 
 class Rejoinder(object):
@@ -173,7 +171,8 @@ class GenericRule(object):
             for rule in self.group:
                 # Remove common questions keywords to improve distinction
                 keywords = [
-                    kw for kw in rule.keywords if kw not in group_entities and kw not in all_words
+                    kw for kw in rule.keywords
+                    if kw not in group_entities and kw not in all_words
                 ]
                 all_words.update(keywords)
                 keywords = ' '.join(keywords)
@@ -203,7 +202,7 @@ class GenericRule(object):
             ).format(
                 label=self.label,
                 words=self.words,
-                questions='\n\t - '.join(self.questions),
+                questions='\n\t - '.join(self.questions) + ' -',
                 group_rejoinders=self.rejoinders_text()
             )
         else:
