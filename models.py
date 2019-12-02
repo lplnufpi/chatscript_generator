@@ -2,7 +2,6 @@
 import re
 import nltk
 
-from utils import utils
 import add_syns
 import preprocessing
 import find_keywords
@@ -129,15 +128,17 @@ class Rule(object):
         return list(kw)
 
     def __str__(self):
+        call_review = '\n\t$rule = %rule\n\t^reuse(~review_interacion.REVIEW)'
         text = (
-            '{extra_space}u: {label} ({rule}){space}{answer}'
+            '{extra_space}u: {label} ({rule}){space}{answer}{call_review}'
         ).format(
             extra_space='\n'*2 if self.rule_id == 0 else '',
             label=self.label,
             id=self.rule_id,
             rule=self.add_syns_question,
             space='\n\t' if self.label_type != 'S' else ' ',
-            answer=self.answer
+            answer=self.answer,
+            call_review=call_review
         )
         return text
 

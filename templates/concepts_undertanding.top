@@ -15,3 +15,17 @@ concept: ~search_options [
     "encontrei algumas opções relacionadas à sua busca"
     "encontrei essas questões relacionadas ao que você digitou"
 ]
+
+concept: ~usefulness_answer [
+    "essa resposta foi útil?"
+    "isso responde à sua pergunta?"
+    "era isso que estava procurando?"
+]
+
+concept: ~good ["que bom" ótimo excelente]
+
+concept: ~glad_to_help [
+    "fico feliz em ajudar"
+    "estou feliz em poder ajudar"
+    "estou trabalhando para sempre lhe atender bem"
+]

@@ -1,0 +1,9 @@
+topic: ~review_interacion repeat ()
+
+u: REVIEW ($rule)
+	^pick(~usefulness_answer)
+	a: ([~yess ~adv_afirmacao])
+	   ^pick(~good), ^pick(~glad_to_help).
+	a: ([~noo ~adv_negacao])
+	   $err = ^save_input_error($quest $rule)
+	   ^pick(~cant_help), ^pick(~not_ready_yet), mas ^pick(~tranfeer)
