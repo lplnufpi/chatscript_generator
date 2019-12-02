@@ -7,22 +7,24 @@ import dataset
 import preprocess
 
 
-if __name__ == '__main__':
-    code = 100
+code = 100
+db = dataset.connect('sqlite:///user_inputs.db')
+table = db['inputs']
 
-    db = dataset.connect('sqlite:///user_inputs.db')
-    table = db['inputs']
+input_original = sys.argv[1].replace('**', ' ')
+input_pcsd = preprocess.preprocess(input_original)
+topic = sys.argv[2].split('_gen')[0]
 
-    topic = sys.argv[2]
-    user_input = sys.argv[1].replace('**', ' ')
-    ppsd_input = preprocess.preprocess(user_input)
+result = table.find_one(topic=topic, input_processed=input_pcsd)
+if result and result['rule']:
+    code = int(re.search(r'\d+', result['rule']).group())
 
-    result = table.find_one(topico=topic, entrada_processada=user_input)
-    if result and result['regra']:
-        code = int(re.search(r'\d+', result['regra']).group())
+    # Update requisitions count
+    requisitions = result['requisitions'] + 1
+    table.update(dict(requisitions=requisitions, id=result['id']), ['id'])
 
-    # NOTE: After look for the user input in database and not found it
-    #       wold be nice to find all rules and try to get the one whose
-    #       most apropriate to match user input.
+# NOTE: After look for the user input in database and not found it
+#       wold be nice to find all rules and try to get the one whose
+#       most apropriate to match user input.
 
-    exit(code)
+exit(code)

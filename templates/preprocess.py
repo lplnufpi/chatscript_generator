@@ -40,8 +40,7 @@ def preprocess(question):
         str: Question lower, without punctuation and with stopwords
             replaced by wildcards.
     """
-    text = question.lower().split() if ' ' in question else question.lower()
+    text = question.lower().split(' ')
     no_stopwords = remove_stopwords(text)
-    no_stopwords = ' '.join(no_stopwords)
 
     return no_stopwords
