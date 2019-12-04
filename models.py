@@ -126,7 +126,7 @@ class Rule(object):
         return list(kw)
 
     def __str__(self):
-        call_review = '\n\t$rule = %rule\n\t^reuse(~review_interacion.REVIEW)'
+        call_review = '\n\t$rule = %rule\n\t REVIEW ^reuse(~review_interacion.REVIEW)'
         text = (
             '{extra_space}u: {label} ({rule}){space}{answer}{call_review}'
         ).format(
@@ -248,7 +248,10 @@ class Topic(object):
         else:
             self.random = ''
             for rule in self.rules:
-                self.keywords.extend(rule.keywords)
+                if rule.entities:
+                    self.keywords.extend(rule.entities)
+                else:
+                    self.keywords.append(rule.original_question)
 
     def __str__(self):
         top_header = (
