@@ -115,6 +115,8 @@ def sort_by_entities(rules):
     sorted_rules = sorted(rules, key=lambda r: len(r.entities), reverse=True)
     for rule in sorted_rules:
         entities = [ent for ent in rule.entities if ent not in common_words]
+        if len(entities) <= 1:
+            continue
         entities = sorted(
             entities,
             key=lambda ent: rule.nospace_question.index(ent) if ent in rule.nospace_question else 1000
@@ -149,7 +151,7 @@ def generalize(topic, wordembedding):
     generalized_rules = list()
     keywords = get_keywords(topic.rules)
     groups = group_by_entities(topic.rules, set(keywords))
-
+    groups.sort(key=lambda g: len(g.entity.split(' ')), reverse=True)
     for index, group in enumerate(groups):
         gen_rule = models.GenericRule(
             index, group.rules, group.entity, topic.name

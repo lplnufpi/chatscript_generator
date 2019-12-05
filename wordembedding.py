@@ -7,7 +7,7 @@ class WordEmbbeding(object):
     """Class to use the functions of WordEmbedding models."""
     model = None
     filename = None
-    ideal_similarity = 0.9
+    ideal_similarity = 0.0
 
     def __init__(self):
         dirname = os.path.dirname(os.path.abspath(__file__))
@@ -44,10 +44,11 @@ class WordEmbbeding(object):
 
 
 class CBoW(WordEmbbeding):
-    filename = 'cbow_s50'
+    filename = 'cbow_s300'
 
 
 if __name__ == '__main__':
     cbow = CBoW()
     result = cbow.get_similar('padaria')
     print(result)
+    import pdb;pdb.set_trace()

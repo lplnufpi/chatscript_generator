@@ -194,7 +194,7 @@ class GenericRule(object):
     def __str__(self):
         if len(self.group) > 1:
             gen_rule = (
-                'u: {label} ([{words}])\n\t'
+                'u: {label} (<<{words}>>)\n\t'
                 '$quest = %originalsentence\n\t'
                 '^pick(~not_well_understood), %user, '
                 'mas ^pick(~search_options):\n\t - {questions}\n'
@@ -207,7 +207,7 @@ class GenericRule(object):
             )
         else:
             gen_rule = (
-                'u: {label} ([{words}])\n\t'
+                'u: {label} (<<{words}>>)\n\t'
                 '$quest = %originalsentence\n\t'
                 '^pick(~not_well_understood), %user, '
                 '^pick(~you_mean) "{sugestion}"?\n'
@@ -236,15 +236,17 @@ class Topic(object):
     keywords = None
     rules = None
     max_return_code = 100
+    beauty_name = None
 
-    def __init__(self, name, rules):
+    def __init__(self, name, rules, beauty_name=None):
         self.name = name
         self.rules = rules
         self.keywords = list()
+        self.beauty_name = beauty_name
 
         if self.name.endswith('_gen'):
             self.keywords.append('REGRAS_GENERICAS')
-            self.random = 'random '
+            self.random = ''
         else:
             self.random = ''
             for rule in self.rules:

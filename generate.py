@@ -36,7 +36,7 @@ def load_questions(path, lower=True):
     """
     questions = list()
     input_lines = load_file(path)
-    for line in input_lines:
+    for line in input_lines[1:]:
         line_parts = line.split(',')
 
         title = line_parts[0]
@@ -45,7 +45,7 @@ def load_questions(path, lower=True):
         question = line_parts[1].lower() if lower else line_parts[1]
         questions.append((title, question, answer))
 
-    return questions
+    return input_lines[0], questions
 
 
 def preprocess_questions(qnas, ctx_entities):
@@ -87,6 +87,67 @@ def generate_rules(qnas, ctx_entities, embedding_model):
     return rules
 
 
+def generate_topic_menu(topics):
+    names = list()
+    rejoinders = list()
+    for topic in topics:
+        if topic.beauty_name:
+            names.append(topic.beauty_name)
+            options = list()
+            options_rule = list()
+            for rule in topic.rules:
+                if rule.title:
+                    options.append(rule.title)
+                    output = '^reuse(~{}.{})'.format(topic.name, rule.label)
+                    options_rule.append(
+                        '\n\t\t\t\tb: ({pattern}) {output}'.format(
+                            pattern=rule.title, output=output
+                        )
+                    )
+
+            options =  '\n\t\t\t- '.join(options)
+            options_text = '\n\t\t\tSaber sobre:\n\t\t\t- {}'.format(options)
+            options_rule = ''.join(options_rule)
+
+            rej = 'a: ({pattern}){options_text}{options_rule}'.format(
+                pattern=topic.beauty_name.lower(),
+                options_text=options_text,
+                options_rule=options_rule,
+            )
+            rejoinders.append(rej)
+
+    topics_names = '- {} - '.format('\n\t- '.join(names))
+
+    class TopicMenu(object):
+        name = None
+        head = None
+        rejoinders = None
+
+        def __init__(self, head, rejoinders):
+            self.name = 'menu'
+            self.head = head
+            self.rejoinders = rejoinders
+
+        def __str__(self):
+            topic_text = (
+                'topic: ~menu repeat ()\n'
+                'u: () Posso lhe dar informaçõe sobre:\n\t{head}\n\t\t{rejoinders}'
+                # '    a: (entregas)\n'
+                # '        Você gostaria de saber sobre:\n'
+                # '        - entrega retida na fiscalização\n'
+                # '        - prazo de entrega -\n'
+                # '        b: (entrega retida na fiscalização) ASDF FDSA entrega retida na fiscalização\n'
+                # '        b: (prazo de entrega) ASDF FDSA prazo de entrega\n'
+                # '    a: (pagamento)  pagamento\n'
+                # '    a: (trocas e devoluções) trocas e devoluções\n'
+            ).format(
+                head=self.head, rejoinders=self.rejoinders
+            )
+            return topic_text
+
+    menu = TopicMenu(topics_names, '\n\t\t'.join(rejoinders))
+    return menu
+
 def generate(
     ctx_entities_path='input/ctx_entities.txt'
 ):
@@ -101,13 +162,13 @@ def generate(
     ctx_entities = load_file(ctx_entities_path)
 
     for questions_path in input_files:
-        questions = load_questions(questions_path)
+        beaty_topic_name, questions = load_questions(questions_path)
         rules = generate_rules(questions, ctx_entities, cbow)
 
         sorted_rules = generalize_rules.sort_by_entities(rules)
 
         top_name = questions_path.split(os.sep)[-1].split('.')[0]
-        topic = models.Topic(top_name, rules)
+        topic = models.Topic(top_name, rules, beauty_name=beaty_topic_name)
 
         gen_rules = generalize_rules.generalize(topic, wordembedding)
         gen_topic = models.Topic(top_name+'_gen', gen_rules)
@@ -117,6 +178,8 @@ def generate(
         generetad_topics.append(topic)
         generetad_topics.append(gen_topic)
 
+    menu = generate_topic_menu(generetad_topics)
+    generetad_topics.append(menu)
     postprocessing.save_chatbot_files('Botin', generetad_topics)
 
 

@@ -138,7 +138,8 @@ u: () # main per-sentence processing
 	if (%response == $_responseCount)  # we failed, somehow, to find something to say to user. Say something
 	{
 		 ^repeat()
-         [Desculpe, não pude entender o que você deseja] [Desculpe, não lhe entendi] [Não consegui entender o que você deseja].
+        #  [Desculpe, não pude entender o que você deseja] [Desculpe, não lhe entendi] [Não consegui entender o que você deseja].
+		 ^respond(~menu)
 	}
 
 
