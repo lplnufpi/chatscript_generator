@@ -105,8 +105,9 @@ def generate_topic_menu(topics):
                         )
                     )
 
+            # Join options
             options =  '\n\t\t\t- '.join(options)
-            options_text = '\n\t\t\tSaber sobre:\n\t\t\t- {}'.format(options)
+            options_text = ('\n\t\t\tSaber sobre:\n\t\t\t- {}').format(options)
             options_rule = ''.join(options_rule)
 
             rej = 'a: ({pattern}){options_text}{options_rule}'.format(
@@ -116,7 +117,7 @@ def generate_topic_menu(topics):
             )
             rejoinders.append(rej)
 
-    topics_names = '- {} - '.format('\n\t- '.join(names))
+    topics_names = '- {}'.format('\n\t- '.join(names))
 
     class TopicMenu(object):
         name = None
@@ -130,16 +131,11 @@ def generate_topic_menu(topics):
 
         def __str__(self):
             topic_text = (
-                'topic: ~menu repeat ()\n'
-                'u: () Posso lhe dar informaçõe sobre:\n\t{head}\n\t\t{rejoinders}'
-                # '    a: (entregas)\n'
-                # '        Você gostaria de saber sobre:\n'
-                # '        - entrega retida na fiscalização\n'
-                # '        - prazo de entrega -\n'
-                # '        b: (entrega retida na fiscalização) ASDF FDSA entrega retida na fiscalização\n'
-                # '        b: (prazo de entrega) ASDF FDSA prazo de entrega\n'
-                # '    a: (pagamento)  pagamento\n'
-                # '    a: (trocas e devoluções) trocas e devoluções\n'
+                'topic: ~menu keep repeat ()\n'
+                'u: () Posso lhe dar informaçõe sobre:'
+                '\n\t{head}\n\t- Falar com um atendente -'
+                '\n\t\t{rejoinders}\n\t\ta: (<<falar atendente>>)'
+                '\n\t\t\t^pick(~all_right), ^pick(~tranfeer).'
             ).format(
                 head=self.head, rejoinders=self.rejoinders
             )

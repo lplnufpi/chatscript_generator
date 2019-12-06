@@ -10,7 +10,7 @@ table = db['inputs']
 
 input_original = sys.argv[1].replace('**', ' ')
 input_pcsd = preprocess.preprocess(input_original)
-topic = sys.argv[2].split('_gen')[0]
+topic = sys.argv[2].split('_gen')[0] if len(sys.argv) >=3 else None
 rule = sys.argv[3][1:] if len(sys.argv) == 4 else None
 
 table.insert({

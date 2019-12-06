@@ -40,8 +40,19 @@ concept: ~not_ready_yet [
     "meus parafusos ainda não estão bem apertados"
 ]
 
+concept: ~all_right [
+    Ok Certo "Tudo bem" "Está bem"
+]
+
 concept: ~tranfeer [
     "vou tranferir você para um atendente que irá lhe ajudar"
     "estou lhe transferindo para um atendente que lhe ajudará"
     "um atendente humano irá lhe auxiliar a partir de agora"
+]
+
+concept: ~options [
+    "Posso lhe dar informaçõe sobre"
+    "Escolha uma das opções para prosseguir o atendimento"
+    "Você gostaria de saber sobre"
+    "Aqui estão algumas opções que podem ser úteis"
 ]

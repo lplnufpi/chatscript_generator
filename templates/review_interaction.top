@@ -6,4 +6,5 @@ u: REVIEW ($rule)
 	   ^pick(~good), ^pick(~glad_to_help).
 	a: ([~noo ~adv_negacao])
 	   $err = ^save_input_error($quest $rule)
-	   ^pick(~cant_help), ^pick(~not_ready_yet), mas ^pick(~tranfeer)
+	   ^pick(~cant_help), ^pick(~not_ready_yet). BREAK
+	   ^respond(~menu)
