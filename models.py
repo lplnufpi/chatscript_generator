@@ -4,6 +4,7 @@ import re
 import add_syns
 import preprocessing
 import find_keywords
+from utils import plural_singular
 
 
 class Rejoinder(object):
@@ -55,7 +56,7 @@ class Rule(object):
     entities = None
     intentions = None
     intentions_syns_dict = None
-    _entities_singular = None
+    splited_entities = None
 
     def __init__(
         self, rule_id, title, question, answer, ctx_entities,
@@ -68,14 +69,16 @@ class Rule(object):
         self.answer = answer
         self.ctx_entities = ctx_entities
         self.label = label_type + str(rule_id)
+        self.splited_entities = list()
 
         if add_syns_question is None:
             self.do_preprocessing()
             self.find_intentions_entities()
             self.add_syns(embedding_model)
-            self._entities_singular = list()
         else:
             self.add_syns_question = add_syns_question
+
+        self.add_plurals(embedding_model)
 
     def do_preprocessing(self):
         self.ppcd_question = preprocessing.preprocess(
@@ -88,7 +91,6 @@ class Rule(object):
 
         self.entities = find_keywords.find_entities(self.nosw_question)
 
-        self.splited_entities = list()
         for ent in self.entities:
             self.splited_entities.extend(ent.split())
         self.splited_entities = set(self.splited_entities)
@@ -104,6 +106,28 @@ class Rule(object):
         self.add_syns_question = add_syns.add_intentions_syns(
             self.ppcd_question, self.intentions_syns_dict
         )
+
+    def add_plurals(self, embedding_model):
+        question = self.add_syns_question
+        # if self.splited_entities:
+        #     entities = self.splited_entities
+        # else:
+        entities = list()
+        tg_words = find_keywords.tag_text(self.add_syns_question)
+        for word in tg_words.split(' '):
+            if (
+                not word.startswith('*') and
+                find_keywords.has_tags(word, ['N', 'NPROP', 'ADJ', 'PCP'])
+            ):
+                entities.append(word.split('/')[0])
+
+        for ent in entities:
+            ent_plural = plural_singular.get_plurals(ent, embedding_model)
+            if ent_plural:
+                question = question.replace(
+                    ent, '[{} {}]'.format(ent, ent_plural)
+                )
+        self.add_syns_question = question
 
     @property
     def nospace_question(self):
@@ -237,6 +261,7 @@ class Topic(object):
     rules = None
     max_return_code = 100
     beauty_name = None
+    description = 'Blablá'
 
     def __init__(self, name, rules, beauty_name=None):
         self.name = name

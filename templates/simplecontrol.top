@@ -48,10 +48,6 @@ harry
 # we dont wont rules erased from it as they are used.
 topic: ~control system ()
 
-# on startup, do introduction.  It takes the user input which starts a new conversation and looks for a response in  ~introductions
-u: ( %input<%userfirstline)
-	gambit(~introductions)
-
 u: () # main per-sentence processing
 	$_responseCount = %response
     # %response == $_responseCount means we have not generated an output for this input yet,

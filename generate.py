@@ -161,7 +161,7 @@ def generate(
         beaty_topic_name, questions = load_questions(questions_path)
         rules = generate_rules(questions, ctx_entities, cbow)
 
-        sorted_rules = generalize_rules.sort_by_entities(rules)
+        sorted_rules = generalize_rules.sort_by_entities(rules, cbow)
 
         top_name = questions_path.split(os.sep)[-1].split('.')[0]
         topic = models.Topic(top_name, rules, beauty_name=beaty_topic_name)

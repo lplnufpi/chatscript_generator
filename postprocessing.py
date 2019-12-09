@@ -55,11 +55,18 @@ def save_chatbot_files(botname, topics, cs_path='../ChatScript'):
     if not os.path.isdir(botdir):
         os.mkdir(botdir)
 
+    descriptions = list()
     for top in topics:
         save_topic_file(top, botdir)
+        try:
+            if top.beauty_name:
+                descriptions.append(top.beauty_name.lower())
+        except AttributeError:
+            continue
 
     map_values = {
-        'BOTNAME': botname.capitalize()
+        'BOTNAME': botname.capitalize(),
+        'FALAR_SOBRE': ', '.join(descriptions)
     }
     save_control_knowledge_files(map_values, botdir)
 

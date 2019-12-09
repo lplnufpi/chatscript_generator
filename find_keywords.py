@@ -31,10 +31,11 @@ def tag_text(text):
     return ''
 
 
-def has_tag(word, tag):
+def has_tags(word, tags):
     """Verify if word has tag.
     """
-    return tag_text(word).split('/')[-1] == tag
+    tag = word.split('/')[-1]
+    return tag in tags
 
 
 def flatten_list(items):
