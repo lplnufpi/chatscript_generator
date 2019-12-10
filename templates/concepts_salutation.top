@@ -1,5 +1,5 @@
 # SALUTATION CONCEPTS
-concept: ~salutation [olá oi opa beleza "e aí" "bom dia" "boa tarde" "boa noite"]
+concept: ~salutation [olá oi opa beleza "e aí" "bom dia" "boa tarde" "boa noite" "/start"]
 concept: ~salutation_answers [olá oi]
 
 concept: ~can_i_help ["Como posso ajudar?" "Em que posso ajudar?" "O que posso fazer por você?"]
