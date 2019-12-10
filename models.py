@@ -277,13 +277,14 @@ class Topic(object):
     rules = None
     max_return_code = 100
     beauty_name = None
-    description = 'Blablá'
+    wordembedding = None
 
-    def __init__(self, name, rules, beauty_name=None):
+    def __init__(self, name, rules, wordembedding, beauty_name=None):
         self.name = name
         self.rules = rules
         self.keywords = list()
         self.beauty_name = beauty_name
+        self.wordembedding = wordembedding
 
         if self.name.endswith('_gen'):
             self.keywords.append('REGRAS_GENERICAS')
@@ -295,6 +296,21 @@ class Topic(object):
                     self.keywords.extend(rule.entities)
                 else:
                     self.keywords.append(rule.original_question)
+    def generate_keywords_plurals(self):
+        plurals = list()
+        if self.name.endswith('_gen'):
+            return plurals
+
+        for kw in self.keywords:
+            plural = ''
+            for subkw in kw.split(' '):
+                plural_sub = plural_singular.get_plurals(
+                    subkw, cbow=self.wordembedding
+                )
+                if plural_sub:
+                    plural = plural + ' ' + plural_sub
+            plurals.append(plural)
+        return plurals
 
     def __str__(self):
 
@@ -317,12 +333,19 @@ class Topic(object):
                 '\t}}\n'
             ).format(name=self.name+'_gen', max_return=self.max_return_code)
 
+        # create plurals to keywords
+        plurals = self.generate_keywords_plurals()
+        # remove repeated words
+        total_keywords = ' '.join(
+            set(' '.join(self.keywords + plurals).split(' '))
+        )
+
         top_header = (
             u'topic: ~{name} keep repeat {random}({keywords})\n{default_rule}'
         ).format(
             name=self.name,
             random=self.random,
-            keywords=' '.join(set(self.keywords)),
+            keywords=total_keywords,
             default_rule=default_rule
         )
 

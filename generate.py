@@ -176,10 +176,10 @@ def generate(
         sorted_rules = generalize_rules.sort_by_entities(rules, cbow)
 
         top_name = questions_path.split(os.sep)[-1].split('.')[0]
-        topic = models.Topic(top_name, rules, beauty_name=beaty_topic_name)
+        topic = models.Topic(top_name, rules, cbow, beauty_name=beaty_topic_name)
 
         gen_rules = generalize_rules.generalize(topic, cbow)
-        gen_topic = models.Topic(top_name+'_gen', gen_rules)
+        gen_topic = models.Topic(top_name+'_gen', gen_rules, cbow)
 
         topic.rules.extend(sorted_rules)
 
