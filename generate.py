@@ -107,7 +107,10 @@ def generate_topic_menu(topics):
 
             # Join options
             options =  '\n\t\t\t- '.join(options)
-            options_text = ('\n\t\t\tSaber sobre:\n\t\t\t- {}').format(options)
+            options_text = (
+                '\n\t\t\t^pick(~all_right), aqui estão opções relacionadas a '
+                '"{entity}":\n\t\t\t- {options}'
+            ).format(entity=topic.beauty_name, options=options)
             options_rule = ''.join(options_rule)
 
             rej = 'a: ({pattern}){options_text}{options_rule}'.format(
@@ -132,7 +135,7 @@ def generate_topic_menu(topics):
         def __str__(self):
             topic_text = (
                 'topic: ~menu keep repeat ()\n'
-                'u: () Posso lhe dar informaçõe sobre:'
+                'u: () Posso lhe dar informações sobre:'
                 '\n\t{head}\n\t- Falar com um atendente -'
                 '\n\t\t{rejoinders}\n\t\ta: (<<falar atendente>>)'
                 '\n\t\t\t^pick(~all_right), ^pick(~tranfeer).'

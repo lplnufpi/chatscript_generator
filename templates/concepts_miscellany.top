@@ -56,3 +56,10 @@ concept: ~options [
     "Você gostaria de saber sobre"
     "Aqui estão algumas opções que podem ser úteis"
 ]
+
+concept: ~question_talk_to_person [
+    "Você gostaria de falar com um atendente?"
+    "Você quer continuar o atendimento com uma pessoa?"
+    "Gostaria de ser atendido por um ser humano?"
+    "Você quer falar com um atendente?"
+]

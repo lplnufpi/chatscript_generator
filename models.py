@@ -150,7 +150,7 @@ class Rule(object):
         return list(kw)
 
     def __str__(self):
-        call_review = '\n\t$rule = %rule\n\t REVIEW ^reuse(~review_interacion.REVIEW)'
+        call_review = '\n\t$rule = %rule\n\t ^reuse(~review_interacion.REVIEW)'
         text = (
             '{extra_space}u: {label} ({rule}){space}{answer}{call_review}'
         ).format(
@@ -281,18 +281,16 @@ class Topic(object):
                     self.keywords.append(rule.original_question)
 
     def __str__(self):
-        top_header = (
-            u'topic: ~{name} keep repeat {random}({keywords})\n'
-        ).format(
-            name=self.name,
-            random=self.random,
-            keywords=' '.join(set(self.keywords))
-        )
 
         rules_text = '\n'.join([rule.__str__() for rule in self.rules])
         if self.name.endswith('_gen'):
+            default_rule = '\nu: SET_VAR ()\n\t$do_review = null\n\n'
             search_rule_text = ''
         else:
+            default_rule = (
+                '\nu: SET_VAR ()\n\t$quest = %originalsentence'
+                '\n\t$do_review = true'
+            )
             search_rule_text = (
                 'u: SEARCH_RULE ()\n'
                 '\t$res = ^search_rule(%originalsentence %topic) / 256\n'
@@ -302,5 +300,14 @@ class Topic(object):
                 '\t\t^respond(~{name})\n'
                 '\t}}\n'
             ).format(name=self.name+'_gen', max_return=self.max_return_code)
+
+        top_header = (
+            u'topic: ~{name} keep repeat {random}({keywords})\n{default_rule}'
+        ).format(
+            name=self.name,
+            random=self.random,
+            keywords=' '.join(set(self.keywords)),
+            default_rule=default_rule
+        )
 
         return top_header + rules_text + '\n\n\n' + search_rule_text
