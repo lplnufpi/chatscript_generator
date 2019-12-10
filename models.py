@@ -174,9 +174,11 @@ class GenericRule(object):
     label_type = None
     rejoinders = None
     original_topic_name = None
+    wordembedding = None
 
     def __init__(
-        self, rule_id, group, words, original_topic_name, label_type='G'
+        self, rule_id, group, words, original_topic_name,
+        label_type='G', wordembedding=None
     ):
         self.rule_id = rule_id
         self.label_type = label_type
@@ -186,6 +188,7 @@ class GenericRule(object):
         self.words = words
         self.original_topic_name = original_topic_name
         self.generate_rejoinders()
+        self.wordembedding = wordembedding
 
     def generate_rejoinders(self):
         self.rejoinders = list()
@@ -216,7 +219,20 @@ class GenericRule(object):
         return '\n'.join([ref.__str__() for ref in self.rejoinders])
 
     def __str__(self):
+        words_with_plural = list()
+        for word in self.words.split(' '):
+            plural = plural_singular.get_plurals(
+                word, cbow=self.wordembedding
+            )
+            if plural:
+                words_with_plural.append('[{} {}]'.format(word, plural))
+            else:
+                words_with_plural.append(word)
+
+        words_with_plural = ' '.join(words_with_plural)
+
         if len(self.group) > 1:
+
             gen_rule = (
                 'u: {label} (<<{words}>>)\n\t'
                 '$quest = %originalsentence\n\t'
@@ -225,7 +241,7 @@ class GenericRule(object):
                 '{group_rejoinders}'
             ).format(
                 label=self.label,
-                words=self.words,
+                words=words_with_plural,
                 questions='\n\t - '.join(self.questions) + ' -',
                 group_rejoinders=self.rejoinders_text()
             )
@@ -238,7 +254,7 @@ class GenericRule(object):
                 '{group_rejoinders}'
             ).format(
                 label=self.label,
-                words=self.words,
+                words=words_with_plural,
                 sugestion=self.group[0].title,
                 group_rejoinders=self.rejoinders_text()
             )

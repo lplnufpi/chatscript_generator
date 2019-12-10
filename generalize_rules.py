@@ -154,7 +154,8 @@ def generalize(topic, wordembedding):
     groups.sort(key=lambda g: len(g.entity.split(' ')), reverse=True)
     for index, group in enumerate(groups):
         gen_rule = models.GenericRule(
-            index, group.rules, group.entity, topic.name
+            index, group.rules, group.entity, topic.name,
+            wordembedding=wordembedding
         )
         generalized_rules.append(gen_rule)
 

@@ -7,6 +7,7 @@ import preprocessing
 import wordembedding
 import postprocessing
 import generalize_rules
+from utils import plural_singular
 
 
 def load_file(path):
@@ -87,7 +88,7 @@ def generate_rules(qnas, ctx_entities, embedding_model):
     return rules
 
 
-def generate_topic_menu(topics):
+def generate_topic_menu(topics, cbow):
     names = list()
     rejoinders = list()
     for topic in topics:
@@ -113,8 +114,16 @@ def generate_topic_menu(topics):
             ).format(entity=topic.beauty_name, options=options)
             options_rule = ''.join(options_rule)
 
+            name = topic.beauty_name.lower()
+            plural = ''
+            for subname in name.split(' '):
+                plural_sub = plural_singular.get_plurals(subname, cbow=cbow)
+                if plural_sub:
+                    plural = plural + ' ' + plural_sub
+            pattern = '[{} {}]'.format(name, plural) if plural else name
+
             rej = 'a: ({pattern}){options_text}{options_rule}'.format(
-                pattern=topic.beauty_name.lower(),
+                pattern=pattern,
                 options_text=options_text,
                 options_rule=options_rule,
             )
@@ -169,7 +178,7 @@ def generate(
         top_name = questions_path.split(os.sep)[-1].split('.')[0]
         topic = models.Topic(top_name, rules, beauty_name=beaty_topic_name)
 
-        gen_rules = generalize_rules.generalize(topic, wordembedding)
+        gen_rules = generalize_rules.generalize(topic, cbow)
         gen_topic = models.Topic(top_name+'_gen', gen_rules)
 
         topic.rules.extend(sorted_rules)
@@ -177,7 +186,7 @@ def generate(
         generetad_topics.append(topic)
         generetad_topics.append(gen_topic)
 
-    menu = generate_topic_menu(generetad_topics)
+    menu = generate_topic_menu(generetad_topics, cbow)
     generetad_topics.append(menu)
     postprocessing.save_chatbot_files('Botin', generetad_topics)
 

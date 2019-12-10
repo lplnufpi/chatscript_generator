@@ -21,32 +21,35 @@ def _get_word_plurals(word):
     word = word.lower()
 
     # Terminadas em vogais antecedidas por consoantes ou ditongos orais
-    if (
-        (is_vogal(word[-1]) and (not is_vogal(word[-2]) or ditongo_oral(word)))
-        or word[-1] == 'n'
-    ):
-        plurals.append(word + 's')
-    if word[-1] == 'm':
-        plurals.append(word[:-1] + 'ns')
-    if word[-1] in ['r', 'z']:
-        plurals.append(word + 'es')
-    if word[-1] == 'l':
-        if word[-2] in ['a', 'e', 'o', 'u']:
-            if word == 'mal':
-                plurals.append('males')
-            elif word == 'cônsul':
-                plurals.append('cônsules')
-            else:
-                plurals.append(word[:-1] + 'is')
-        if word[-2] == 'i':
-            plurals.append(word[:-1] + 's')
-            plurals.append(word[:-2] + 'eis')
-    if word.endswith('ão'):
-        plurals.append(word[:-2] + 'ões')
-        plurals.append(word[:-2] + 'ães')
-        plurals.append(word[:-2] + 'âos')
-    if word.endswith('x'):
-        plurals.append(word)
+    try:
+        if (
+            (is_vogal(word[-1]) and (not is_vogal(word[-2]) or ditongo_oral(word)))
+            or word[-1] == 'n'
+        ):
+            plurals.append(word + 's')
+        if word[-1] == 'm':
+            plurals.append(word[:-1] + 'ns')
+        if word[-1] in ['r', 'z']:
+            plurals.append(word + 'es')
+        if word[-1] == 'l':
+            if word[-2] in ['a', 'e', 'o', 'u']:
+                if word == 'mal':
+                    plurals.append('males')
+                elif word == 'cônsul':
+                    plurals.append('cônsules')
+                else:
+                    plurals.append(word[:-1] + 'is')
+            if word[-2] == 'i':
+                plurals.append(word[:-1] + 's')
+                plurals.append(word[:-2] + 'eis')
+        if word.endswith('ão'):
+            plurals.append(word[:-2] + 'ões')
+            plurals.append(word[:-2] + 'ães')
+            plurals.append(word[:-2] + 'âos')
+        if word.endswith('x'):
+            plurals.append(word)
+    except IndexError:
+        pass
 
     return plurals
 
