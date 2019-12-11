@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import re
 import os
 import glob
 
@@ -8,6 +9,41 @@ import wordembedding
 import postprocessing
 import generalize_rules
 from utils import plural_singular
+from utils.stopwords import stopwords
+
+
+class DefaultTopic(object):
+    name = None
+    head = None
+    rejoinders = None
+
+    def __init__(self, head, rejoinders, name):
+        self.name = name
+        self.head = head
+        self.rejoinders = rejoinders
+
+    def __str__(self):
+        topic_text = (
+            'topic: ~{name} keep repeat ()\n{rules}'
+        ).format(name=self.name, rules=self.get_rules())
+        return topic_text
+
+
+class TopicTopics(DefaultTopic):
+    def get_rules(self):
+        rules = '\n'.join(self.rejoinders)
+        return rules
+
+
+class TopicMenu(DefaultTopic):
+    def get_rules(self):
+        rules = (
+            'u: () Posso lhe dar informações sobre:'
+            '\n\t{head}\n\t- Falar com um atendente -'
+            '\n\t{rejoinders}\n\ta: (<<falar atendente>>)'
+            '\n\t\t^pick(~all_right), ^pick(~tranfeer).'
+        ).format(head=self.head, rejoinders=self.rejoinders)
+        return rules
 
 
 def load_file(path):
@@ -91,6 +127,7 @@ def generate_rules(qnas, ctx_entities, embedding_model):
 def generate_topic_menu(topics, cbow):
     names = list()
     rejoinders = list()
+    index = 0
     for topic in topics:
         if topic.beauty_name:
             names.append(topic.beauty_name)
@@ -101,16 +138,16 @@ def generate_topic_menu(topics, cbow):
                     options.append(rule.title)
                     output = '^reuse(~{}.{})'.format(topic.name, rule.label)
                     options_rule.append(
-                        '\n\t\t\t\tb: ({pattern}) {output}'.format(
+                        '\n\t\tb: ({pattern}) {output}'.format(
                             pattern=rule.title, output=output
                         )
                     )
 
             # Join options
-            options =  '\n\t\t\t- '.join(options)
+            options =  '\n\t\t- '.join(options)
             options_text = (
-                '\n\t\t\t^pick(~all_right), aqui estão opções relacionadas a '
-                '"{entity}":\n\t\t\t- {options}'
+                '\n\t\t^pick(~all_right), aqui estão opções relacionadas a '
+                '"{entity}":\n\t\t- {options} - '
             ).format(entity=topic.beauty_name, options=options)
             options_rule = ''.join(options_rule)
 
@@ -122,39 +159,76 @@ def generate_topic_menu(topics, cbow):
                     plural = plural + ' ' + plural_sub
             pattern = '[{} {}]'.format(name, plural) if plural else name
 
-            rej = 'a: ({pattern}){options_text}{options_rule}'.format(
+            rej = 'a: M{num} ({pattern}){options_text}{options_rule}'.format(
+                num=index,
                 pattern=pattern,
                 options_text=options_text,
                 options_rule=options_rule,
             )
             rejoinders.append(rej)
+            index = index + 1
 
     topics_names = '- {}'.format('\n\t- '.join(names))
+    menu = TopicMenu(topics_names, '\n\t'.join(rejoinders), 'menu')
 
-    class TopicMenu(object):
-        name = None
-        head = None
-        rejoinders = None
+    rules = [generate_topics_rule(rej, cbow) for rej in rejoinders]
+    topics = TopicTopics('', rules, 'topics')
+    return menu, topics
 
-        def __init__(self, head, rejoinders):
-            self.name = 'menu'
-            self.head = head
-            self.rejoinders = rejoinders
 
-        def __str__(self):
-            topic_text = (
-                'topic: ~menu keep repeat ()\n'
-                'u: () Posso lhe dar informações sobre:'
-                '\n\t{head}\n\t- Falar com um atendente -'
-                '\n\t\t{rejoinders}\n\t\ta: (<<falar atendente>>)'
-                '\n\t\t\t^pick(~all_right), ^pick(~tranfeer).'
-            ).format(
-                head=self.head, rejoinders=self.rejoinders
+def get_splited_words(words):
+    if words.startswith('['):
+        rule_words = words[1:-1].split(' ')
+    elif words.startswith('<<'):
+        rule_words = words[2:-2].split(' ')
+    else:
+        rule_words = words.split(' ')
+    return rule_words
+
+
+def generate_topics_rule(rejoinder, cbow):
+    result = re.match(
+        r'a: (?P<label>M\d+) \((?P<words>.*)\).*?'
+        r'(?P<options>\^pick.*?)(?P<patterns>b:.*)',
+        rejoinder, flags=re.DOTALL
+    ).groupdict()
+    rule_words = get_splited_words(result['words'])
+
+    rejoinders = list()
+    patterns = re.finditer(
+        r'b: \((?P<words>.*?)\) (?P<action>.*?)\n', result['patterns']
+    )
+    for pat in patterns:
+        pat_dict = pat.groupdict()
+        pat_words = get_splited_words(pat_dict['words'])
+
+        # Remove stopwords words in rule keywords
+        words = [
+            w for w in pat_words if w not in rule_words and w not in stopwords
+        ]
+        plurals = list()
+        for w in words:
+            plural = plural_singular.get_plurals(w, cbow=cbow)
+            if plural:
+                plurals.append(plural)
+
+        rejoinders.append(
+            'a: ({words}) {action} ^end(RULE)'.format(
+                words='[{}]'.format(' '.join(words + plurals)),
+                action=pat_dict['action']
             )
-            return topic_text
+        )
+    rule = (
+        'u: ({words}) ^refine()\n\t{rejoinders}\n\t'
+        'a: () ^reuse(~menu.{label})\n'
+    ).format(
+        words=result['words'],
+        rejoinders='\n\t'.join(rejoinders),
+        options=result['options'],
+        label=result['label']
+    )
+    return rule
 
-    menu = TopicMenu(topics_names, '\n\t\t'.join(rejoinders))
-    return menu
 
 def generate(
     ctx_entities_path='input/ctx_entities.txt'
@@ -186,8 +260,9 @@ def generate(
         generetad_topics.append(topic)
         generetad_topics.append(gen_topic)
 
-    menu = generate_topic_menu(generetad_topics, cbow)
+    menu, topics = generate_topic_menu(generetad_topics, cbow)
     generetad_topics.append(menu)
+    generetad_topics.append(topics)
     postprocessing.save_chatbot_files('Botin', generetad_topics)
 
 
