@@ -25,3 +25,5 @@ u: (~salutation_informal)
 
 u: (~salutation_question_informal)
 	^pick(~salutation_question_answer_informal), %user. Eu sou seu assistente virtual, posso falar sobre: FALAR_SOBRE. ^pick(~can_i_help_informal)
+
+u: (tudo bem) Ok

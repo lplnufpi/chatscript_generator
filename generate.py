@@ -147,7 +147,7 @@ def generate_topic_menu(topics, cbow):
             options =  '\n\t\t- '.join(options)
             options_text = (
                 '\n\t\t^pick(~all_right), aqui estão opções relacionadas a '
-                '"{entity}":\n\t\t- {options} - '
+                '"{entity}":\n\t\t- {options} \n\t\t- Menu completo - '
             ).format(entity=topic.beauty_name, options=options)
             options_rule = ''.join(options_rule)
 

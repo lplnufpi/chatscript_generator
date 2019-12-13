@@ -137,6 +137,7 @@ u: () # main per-sentence processing
 		^respond(~topics)
         [Desculpe, não pude entender o que você deseja] [Desculpe, não lhe entendi] [Não consegui entender o que você deseja].
 		^respond(~menu)
+		^respond(~review_interacion)
 	}
 
 
