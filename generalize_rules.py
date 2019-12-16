@@ -127,7 +127,7 @@ def sort_by_entities(rules, embedding_model):
         nrule = models.Rule(
             rule.rule_id, '', '',
             '^reuse(U{})'.format(rule.rule_id),
-            None, embedding_model, label_type='S',
+            None, embedding_model, rule.syns, label_type='S',
             add_syns_question=pattern
         )
         result_rules.append(nrule)

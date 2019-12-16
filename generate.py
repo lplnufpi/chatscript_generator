@@ -100,7 +100,7 @@ def preprocess_questions(qnas, ctx_entities):
         yield pp_question, answer
 
 
-def generate_rules(qnas, ctx_entities, embedding_model):
+def generate_rules(qnas, ctx_entities, embedding_model, syns):
     """Generate the rules according to ChatScript sintax.
 
     Args:
@@ -118,19 +118,20 @@ def generate_rules(qnas, ctx_entities, embedding_model):
             question,
             answer,
             ctx_entities,
-            embedding_model
+            embedding_model,
+            syns
         )
         rules.append(rule)
     return rules
 
 
-def generate_topic_menu(topics, cbow):
-    names = list()
+def generate_topic_menu(topics, cbow, syns):
+    top_names = list()
     rejoinders = list()
     index = 0
     for topic in topics:
         if topic.beauty_name:
-            names.append(topic.beauty_name)
+            top_names.append(topic.beauty_name)
             options = list()
             options_rule = list()
             for rule in topic.rules:
@@ -153,11 +154,22 @@ def generate_topic_menu(topics, cbow):
 
             name = topic.beauty_name.lower()
             plural = ''
+
+            # Add syns to topic name
+            names = list()
             for subname in name.split(' '):
+                names.extend(get_syns(subname, syns))
+
+            for subname in names:
                 plural_sub = plural_singular.get_plurals(subname, cbow=cbow)
                 if plural_sub:
                     plural = plural + ' ' + plural_sub
-            pattern = '[{} {}]'.format(name, plural) if plural else name
+
+            pattern = '[{} {}]'.format(
+                ' '.join(names), plural
+            ) if plural else ' '.join(name)
+            # Remove extra spaces
+            pattern = pattern.replace('  ', ' ')
 
             rej = 'a: M{num} ({pattern}){options_text}{options_rule}'.format(
                 num=index,
@@ -168,10 +180,10 @@ def generate_topic_menu(topics, cbow):
             rejoinders.append(rej)
             index = index + 1
 
-    topics_names = '- {}'.format('\n\t- '.join(names))
+    topics_names = '- {}'.format('\n\t- '.join(top_names))
     menu = TopicMenu(topics_names, '\n\t'.join(rejoinders), 'menu')
 
-    rules = [generate_topics_rule(rej, cbow) for rej in rejoinders]
+    rules = [generate_topics_rule(rej, cbow, syns) for rej in rejoinders]
     topics = TopicTopics('', rules, 'topics')
     return menu, topics
 
@@ -186,7 +198,21 @@ def get_splited_words(words):
     return rule_words
 
 
-def generate_topics_rule(rejoinder, cbow):
+def get_syns(ent, syns):
+    for synset in syns:
+        if ent in synset:
+            return synset
+    return [ent]
+
+
+def get_words_syns(words, syns):
+    new_words = list()
+    for w in words:
+        new_words.extend(get_syns(w, syns))
+    return new_words
+
+
+def generate_topics_rule(rejoinder, cbow, syns):
     result = re.match(
         r'a: (?P<label>M\d+) \((?P<words>.*)\).*?'
         r'(?P<options>\^pick.*?)(?P<patterns>b:.*)',
@@ -206,6 +232,8 @@ def generate_topics_rule(rejoinder, cbow):
         words = [
             w for w in pat_words if w not in rule_words and w not in stopwords
         ]
+        words = get_words_syns(words, syns)
+
         plurals = list()
         for w in words:
             plural = plural_singular.get_plurals(w, cbow=cbow)
@@ -218,9 +246,12 @@ def generate_topics_rule(rejoinder, cbow):
                 action=pat_dict['action']
             )
         )
+
     rule = (
         'u: ({words}) ^refine()\n\t{rejoinders}\n\t'
-        'a: () ^reuse(~menu.{label})\n'
+        'a: ()\n'
+        '\t\tif($go_to_menu){{^reuse(~menu.{label})}}\n'
+        '\t\telse {{$go_to_menu = true}}'
     ).format(
         words=result['words'],
         rejoinders='\n\t'.join(rejoinders),
@@ -231,7 +262,8 @@ def generate_topics_rule(rejoinder, cbow):
 
 
 def generate(
-    ctx_entities_path='input/ctx_entities.txt'
+    ctx_entities_path='input/ctx_entities.txt',
+    syns_path='input/syns.txt'
 ):
     """Generate ChatScript files"""
     input_files = list()
@@ -242,10 +274,11 @@ def generate(
     generetad_topics = list()
     cbow = wordembedding.CBoW()
     ctx_entities = load_file(ctx_entities_path)
+    syns = [line.split(',') for line in load_file(syns_path)]
 
     for questions_path in input_files:
         beaty_topic_name, questions = load_questions(questions_path)
-        rules = generate_rules(questions, ctx_entities, cbow)
+        rules = generate_rules(questions, ctx_entities, cbow, syns)
 
         sorted_rules = generalize_rules.sort_by_entities(rules, cbow)
 
@@ -260,7 +293,7 @@ def generate(
         generetad_topics.append(topic)
         generetad_topics.append(gen_topic)
 
-    menu, topics = generate_topic_menu(generetad_topics, cbow)
+    menu, topics = generate_topic_menu(generetad_topics, cbow, syns)
     generetad_topics.append(menu)
     generetad_topics.append(topics)
     postprocessing.save_chatbot_files('Botin', generetad_topics)

@@ -60,7 +60,7 @@ class Rule(object):
 
     def __init__(
         self, rule_id, title, question, answer, ctx_entities,
-        embedding_model, label_type='U', add_syns_question=None
+        embedding_model, syns, label_type='U', add_syns_question=None
     ):
         self.label_type = label_type
         self.rule_id = rule_id
@@ -70,6 +70,7 @@ class Rule(object):
         self.ctx_entities = ctx_entities
         self.label = label_type + str(rule_id)
         self.splited_entities = list()
+        self.syns = syns
 
         if add_syns_question is None:
             self.do_preprocessing()
@@ -78,7 +79,7 @@ class Rule(object):
         else:
             self.add_syns_question = add_syns_question
 
-        self.add_plurals(embedding_model)
+        self.add_plurals_and_nouns_syns(embedding_model)
 
     def do_preprocessing(self):
         self.ppcd_question = preprocessing.preprocess(
@@ -107,11 +108,14 @@ class Rule(object):
             self.ppcd_question, self.intentions_syns_dict
         )
 
-    def add_plurals(self, embedding_model):
+    def get_syns(self, ent):
+        for synset in self.syns:
+            if ent in synset:
+                return synset
+        return [ent]
+
+    def add_plurals_and_nouns_syns(self, embedding_model):
         question = self.add_syns_question
-        # if self.splited_entities:
-        #     entities = self.splited_entities
-        # else:
         entities = list()
         tg_words = find_keywords.tag_text(self.add_syns_question)
         for word in tg_words.split(' '):
@@ -122,11 +126,18 @@ class Rule(object):
                 entities.append(word.split('/')[0])
 
         for ent in entities:
-            ent_plural = plural_singular.get_plurals(ent, embedding_model)
-            if ent_plural:
-                question = question.replace(
-                    ent, '[{} {}]'.format(ent, ent_plural)
-                )
+            syns = self.get_syns(ent)
+            plurals = list()
+            for syn in syns:
+                syn_plural = plural_singular.get_plurals(syn, embedding_model)
+                if syn_plural:
+                    plurals.append(syn_plural)
+
+            plurals_text = ' {}'.format(' '.join(plurals)) if plurals else ''
+            question = question.replace(
+                ent, '[{}{}]'.format(' '.join(syns), plurals_text)
+            )
+
         self.add_syns_question = question
 
     @property
@@ -296,6 +307,11 @@ class Topic(object):
                     self.keywords.extend(rule.entities)
                 else:
                     self.keywords.append(rule.original_question)
+            new_keywords = list()
+            for ent in self.keywords:
+                new_keywords.extend(self.rules[0].get_syns(ent))
+            self.keywords = new_keywords
+
     def generate_keywords_plurals(self):
         plurals = list()
         if self.name.endswith('_gen'):
@@ -329,8 +345,13 @@ class Topic(object):
                 '\tif($res<{max_return}){{\n'
                 '\t\t^reuse(^join(U $res))\n'
                 '\t}}else{{\n'
-                '\t\t^respond(~{name})\n'
+                '\t\t$go_to_menu = false\n'
+                '\t\t^respond(~topics)\n'
+                '\t\tif (%response == $_responseCount){{\n'
+                '\t\t\t^respond(~{name})\n'
+                '\t\t}}\n'
                 '\t}}\n'
+
             ).format(name=self.name+'_gen', max_return=self.max_return_code)
 
         # create plurals to keywords
