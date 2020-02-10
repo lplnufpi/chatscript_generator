@@ -160,6 +160,41 @@ class Rule(object):
         )
         return list(kw)
 
+    def processed_answer(self):
+
+        calls = re.findall(r'(.*?<<.*?)>>', self.answer)
+        tam = len(calls)
+        # TODO: THROW EXCEPTION IF NUM CALLS > REJOINDERS
+        rjds = ['a', 'b', 'c', 'd', 'e']
+        if tam > 1:
+            answer = ''
+            for i in range(tam):
+                call_answer, args = calls[i].split('<<')
+                args = args.split(' ')
+                spaces = '\t'*(i+1)
+
+                if i>0:
+                    start_rj = '{rj}: ()\n{spc}'.format(
+                        rj=rjds[i-1], spc=spaces
+                    )
+                else:
+                    start_rj = ''
+
+                answer = answer + (
+                    '{start_rejoinder}{answer}\n'
+                    '{spc}$cmd = ^join("python3 /home/jpegx100/develop/lpln/ChatScript/RAWDATA/botin/{program} " {param})\n'
+                    '{spc}^popen( $cmd \'^print_result )\n{spc}'
+                ).format(
+                    start_rejoinder=start_rj,
+                    answer=call_answer,
+                    program=args[0],
+                    param=args[1],
+                    spc=spaces
+                )
+            self.answer = answer
+
+        return self.answer
+
     def __str__(self):
         call_review = '\n\t$rule = %rule\n\t ^reuse(~review_interacion.REVIEW)'
         text = (
@@ -170,7 +205,7 @@ class Rule(object):
             id=self.rule_id,
             rule=self.add_syns_question,
             space='\n\t' if self.label_type != 'S' else ' ',
-            answer=self.answer,
+            answer=self.processed_answer(),
             call_review=call_review
         )
         return text

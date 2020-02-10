@@ -1,6 +1,10 @@
 # This is the main control script. Start here to trace the ChatScript processing steps.
 # When you see this "#", anything after this is a comment, it is not code that is executed.
 # For example, this line is a comment.
+
+outputmacro: ^print_result(^arg)
+    ^arg
+
 outputmacro: ^save_input(^text ^topic ^rule)
 ^system(
 	python3 /home/jpegx100/develop/lpln/ChatScript/RAWDATA/botin/save_input.py ^substitute(character ^text " " "**") ^topic ^rule
