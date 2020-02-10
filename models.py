@@ -166,6 +166,8 @@ class Rule(object):
         tam = len(calls)
         # TODO: THROW EXCEPTION IF NUM CALLS > REJOINDERS
         rjds = ['a', 'b', 'c', 'd', 'e']
+        spaces = '\t'
+
         if tam > 1:
             answer = ''
             for i in range(tam):
@@ -193,20 +195,21 @@ class Rule(object):
                 )
             self.answer = answer
 
-        return self.answer
+        review = (
+            '\n{spc}$rule = %rule\n{spc}^reuse(~review_interacion.REVIEW)'
+        ).format(spc=spaces)
+        return self.answer + review
 
     def __str__(self):
-        call_review = '\n\t$rule = %rule\n\t ^reuse(~review_interacion.REVIEW)'
         text = (
-            '{extra_space}u: {label} ({rule}){space}{answer}{call_review}'
+            '{extra_space}u: {label} ({rule}){space}{answer}'
         ).format(
             extra_space='\n'*2 if self.rule_id == 0 else '',
             label=self.label,
             id=self.rule_id,
             rule=self.add_syns_question,
             space='\n\t' if self.label_type != 'S' else ' ',
-            answer=self.processed_answer(),
-            call_review=call_review
+            answer=self.processed_answer()
         )
         return text
 
