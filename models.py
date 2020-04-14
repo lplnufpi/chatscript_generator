@@ -389,7 +389,6 @@ class Topic(object):
                 '\t\t\t^respond(~{name})\n'
                 '\t\t}}\n'
                 '\t}}\n'
-
             ).format(name=self.name+'_gen', max_return=self.max_return_code)
 
         # create plurals to keywords

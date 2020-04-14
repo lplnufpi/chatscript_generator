@@ -1,9 +1,11 @@
+import os
 import re
 import nlpnet
 import logging
 
 
-nlpnet.set_data_dir('../pos-pt')
+pln_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+nlpnet.set_data_dir(os.path.join(pln_dir, u'pos-pt'))
 tagger = nlpnet.POSTagger()
 
 
