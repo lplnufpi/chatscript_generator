@@ -16,16 +16,18 @@ class DefaultTopic(object):
     name = None
     head = None
     rejoinders = None
+    words = None
 
-    def __init__(self, head, rejoinders, name):
+    def __init__(self, head, rejoinders, name, words=''):
         self.name = name
         self.head = head
         self.rejoinders = rejoinders
+        self.words = words
 
     def __str__(self):
         topic_text = (
-            'topic: ~{name} keep repeat ()\n{rules}'
-        ).format(name=self.name, rules=self.get_rules())
+            'topic: ~{name} keep repeat ({words})\n{rules}'
+        ).format(name=self.name, words=self.words, rules=self.get_rules())
         return topic_text
 
 
@@ -167,7 +169,7 @@ def generate_topic_menu(topics, cbow, syns):
 
             pattern = '[{} {}]'.format(
                 ' '.join(names), plural
-            ) if plural else ' '.join(name)
+            ) if plural else name
             # Remove extra spaces
             pattern = pattern.replace('  ', ' ')
 
@@ -181,7 +183,9 @@ def generate_topic_menu(topics, cbow, syns):
             index = index + 1
 
     topics_names = '- {}'.format('\n\t- '.join(top_names))
-    menu = TopicMenu(topics_names, '\n\t'.join(rejoinders), 'menu')
+    menu = TopicMenu(
+        topics_names, '\n\t'.join(rejoinders), 'menu', words='menu opções ajuda'
+    )
 
     rules = [generate_topics_rule(rej, cbow, syns) for rej in rejoinders]
     topics = TopicTopics('', rules, 'topics')
