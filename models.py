@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
+import os
 import re
 
 import add_syns
 import preprocessing
 import find_keywords
 from utils import plural_singular
+
+BOTNAME = 'botin'
+pln_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BOTPATH = os.path.join(pln_dir, 'ChatScript', 'RAWDATA', BOTNAME)
 
 
 class Rejoinder(object):
@@ -161,38 +166,39 @@ class Rule(object):
         return list(kw)
 
     def processed_answer(self):
-
         calls = re.findall(r'(.*?<<.*?)>>', self.answer)
         tam = len(calls)
         # TODO: THROW EXCEPTION IF NUM CALLS > REJOINDERS
         rjds = ['a', 'b', 'c', 'd', 'e']
         spaces = '\t'
 
-        if tam > 1:
-            answer = ''
-            for i in range(tam):
-                call_answer, args = calls[i].split('<<')
-                args = args.split(' ')
-                spaces = '\t'*(i+1)
+        answer = ''
+        for i in range(tam):
+            call_answer, args = calls[i].split('<<')
+            args = args.split(' ')
+            spaces = '\t'*(i+1)
 
-                if i>0:
-                    start_rj = '{rj}: ()\n{spc}'.format(
-                        rj=rjds[i-1], spc=spaces
-                    )
-                else:
-                    start_rj = ''
-
-                answer = answer + (
-                    '{start_rejoinder}{answer}\n'
-                    '{spc}$cmd = ^join("python3 /home/jpegx100/develop/lpln/ChatScript/RAWDATA/botin/{program} " {param})\n'
-                    '{spc}^popen( $cmd \'^print_result )\n{spc}'
-                ).format(
-                    start_rejoinder=start_rj,
-                    answer=call_answer,
-                    program=args[0],
-                    param=args[1],
-                    spc=spaces
+            if i>0:
+                start_rj = '{rj}: ()\n{spc}'.format(
+                    rj=rjds[i-1], spc=spaces
                 )
+            else:
+                start_rj = ''
+
+            answer = answer + (
+                '{start_rejoinder}{answer}\n'
+                '{spc}$cmd = ^join("python3 {botpath}/{program} " {param})\n'
+                '{spc}^popen( $cmd \'^print_result )\n{spc}'
+            ).format(
+                botpath=BOTPATH,
+                start_rejoinder=start_rj,
+                answer=call_answer,
+                program=args[0],
+                param=args[1],
+                spc=spaces
+            )
+
+        if answer:
             self.answer = answer
 
         review = (
