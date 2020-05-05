@@ -7,17 +7,17 @@ outputmacro: ^print_result(^arg)
 
 outputmacro: ^save_input(^text ^topic ^rule)
 ^system(
-	python3 /home/jpegx100/develop/lpln/ChatScript/RAWDATA/botin/save_input.py ^substitute(character ^text " " "**") ^topic ^rule
+	python3 /home/jpegx/develop/pln/ChatScript/RAWDATA/botin/save_input.py ^substitute(character ^text " " "**") ^topic ^rule
 )
 
 outputmacro: ^save_input_error(^text ^topic)
 ^system(
-	python3 /home/jpegx100/develop/lpln/ChatScript/RAWDATA/botin/save_input.py ^substitute(character ^text " " "**") ^topic
+	python3 /home/jpegx/develop/pln/ChatScript/RAWDATA/botin/save_input.py ^substitute(character ^text " " "**") ^topic
 )
 
 outputmacro: ^search_rule(^text ^topic)
 ^system(
-	python3 /home/jpegx100/develop/lpln/ChatScript/RAWDATA/botin/search_rule.py ^substitute(character ^text " " "**") ^topic
+	python3 /home/jpegx/develop/pln/ChatScript/RAWDATA/botin/search_rule.py ^substitute(character ^text " " "**") ^topic
 )
 
 # this function is executed once for every new user chatting with harry

@@ -44,7 +44,7 @@ class WordEmbbeding(object):
 
 
 class CBoW(WordEmbbeding):
-    filename = 'cbow_s300'
+    filename = 'cbow_s50'
 
 
 if __name__ == '__main__':

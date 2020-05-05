@@ -187,8 +187,7 @@ class Rule(object):
 
             answer = answer + (
                 '{start_rejoinder}{answer}\n'
-                '{spc}$cmd = ^join("python3 {botpath}/{program} " {param})\n'
-                '{spc}^popen( $cmd \'^print_result )\n{spc}'
+                '{spc}{program} {param}\n'
             ).format(
                 botpath=BOTPATH,
                 start_rejoinder=start_rj,
