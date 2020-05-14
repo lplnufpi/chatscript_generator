@@ -1,4 +1,4 @@
-topic: ~INTRODUCTIONS keep repeat (~salutation)
+topic: ~INTRODUCTIONS keep repeat nostay (~salutation)
 
 #!x will match on every return start of a conversation
 t: ( %input<%userfirstline %input>0 )

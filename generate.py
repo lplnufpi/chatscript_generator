@@ -17,17 +17,24 @@ class DefaultTopic(object):
     head = None
     rejoinders = None
     words = None
+    extra = None
 
-    def __init__(self, head, rejoinders, name, words=''):
+    def __init__(self, head, rejoinders, name, words='', extra=''):
         self.name = name
         self.head = head
         self.rejoinders = rejoinders
         self.words = words
+        self.extra = extra
 
     def __str__(self):
         topic_text = (
-            'topic: ~{name} keep repeat ({words})\n{rules}'
-        ).format(name=self.name, words=self.words, rules=self.get_rules())
+            'topic: ~{name} keep repeat {extra}({words})\n{rules}'
+        ).format(
+            name=self.name,
+            extra=self.extra,
+            words=self.words,
+            rules=self.get_rules()
+        )
         return topic_text
 
 
@@ -184,7 +191,11 @@ def generate_topic_menu(topics, cbow, syns):
 
     topics_names = '- {}'.format('\n\t- '.join(top_names))
     menu = TopicMenu(
-        topics_names, '\n\t'.join(rejoinders), 'menu', words='menu opções ajuda'
+        topics_names,
+        '\n\t'.join(rejoinders),
+        'menu',
+        words='menu opções ajuda',
+        extra='nostay '
     )
 
     rules = [generate_topics_rule(rej, cbow, syns) for rej in rejoinders]
