@@ -1,6 +1,6 @@
 topic: ~THANKS keep repeat (obrigado obrigada)
 
 u: ({muito} [obrigado obrigada])
-    ^pick(~you_are_welcome), %user.
+    ^pick(~you_are_welcome), USER.
 u: ({estou} [agradecido agradecida grato])
-    ^pick(~you_are_welcome), %user.
+    ^pick(~you_are_welcome), USER.

@@ -1,10 +1,10 @@
 topic: ~GOODBYES keep repeat (amanhã logo mais breve próxima próximo depois adeus tchau xau bye "passe bem" prazer tenha bom boa)
 
 u: (até _[logo mais breve "a próxima" próximo depois amanhã])
-    Até _0, %user.
+    Até _0, USER.
 
 u: ([adeus tchau xau bye "passe bem" "foi um prazer"])
-    [Adeus] [Tchau], %user.
+    [Adeus] [Tchau], USER.
 
 u: (tenha um{a} [bom boa] ~time_period)
     Obrigado, pra você também.
